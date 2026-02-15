@@ -1,0 +1,19 @@
+# Dependency and generated files
+node_modules/
+npm-debug.log*
+yarn-error.log*
+lib/
+
+# Local env files
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

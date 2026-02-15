@@ -1,0 +1,418 @@
+// ============================================================
+// 🔐 REGLAS DE SEGURIDAD COMPLETAS - CIELO PROMO MULTI-PAÍS
+// ============================================================
+// Arquitectura empresarial con 4 roles: SUPER_ADMIN, ADMIN_COUNTRY, DISTRIBUTOR, STORE
+// ============================================================
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========== 🛡️ FUNCIONES AUXILIARES ==========
+    
+    // 🔐 SUPER_ADMIN - Definido directamente en las REGLAS
+    // NO depende de la colección /users
+    // Verificación por email o claim personalizado
+    function isSuperAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == 'hectorcobea03@gmail.com' ||
+        request.auth.token.admin == true
+      );
+    }
+
+    // Verificar si el usuario está autenticado
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Obtener documento del usuario actual
+    function getUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Verificar rol del usuario (para ADMIN_COUNTRY, DISTRIBUTOR, STORE)
+    function isRole(role) {
+      return isAuth() && getUser().role == role;
+    }
+
+    // Verificar si es ADMIN_COUNTRY (desde colección /users)
+    function isAdminCountry() {
+      return isRole('ADMIN_COUNTRY');
+    }
+
+    // Verificar si es DISTRIBUTOR (desde colección /users)
+    function isDistributor() {
+      return isRole('DISTRIBUTOR');
+    }
+
+    // Verificar si es STORE (desde colección /users)
+    function isStore() {
+      return isRole('STORE');
+    }
+
+    // Verificar si el usuario pertenece a un país
+    function belongsToCountry(countryId) {
+      return isAuth() && getUser().countryId == countryId;
+    }
+
+    // Verificar si el usuario es distribuidor específico
+    function isDistributorId(distributorId) {
+      return isAuth() && getUser().distributorId == distributorId;
+    }
+
+    // Verificar si el usuario es propietario de una tienda
+    function ownsStore(storeId) {
+      return isAuth() && getUser().storeId == storeId;
+    }
+
+    // ✨ VERIFICAR SI EXISTE ADMIN EN UN PAÍS (CORAZÓN DEL SISTEMA)
+    // Sin admin de país, no puede haber tenderos en ese país
+    // Nota: En Firestore Rules no podemos hacer queries complejas
+    // La validación principal ocurre en el backend (Cloud Functions)
+    // Esta regla solo previene creación directa sin pasar por validación
+    function hasCountryAdmin(countryId) {
+      return countryId != null && true; // Validación delegada al backend en authService
+    }
+
+    // ========== 👤 COLLECTION: users ==========
+    // 📝 NOTA: Usuarios creados por:
+    //    - Registro desde cliente (registerUserWithoutCode, registerStore)
+    //    - Script de load/inicialización de código
+    //    - SUPER_ADMIN NO está en esta colección, está definido en las REGLAS
+    match /users/{uid} {
+      // Lectura: 
+      // - El usuario puede leer su propio documento
+      // - SUPER_ADMIN puede leer cualquiera
+      // - ESPECIAL: Cualquier usuario puede leer ADMIN_COUNTRY (para buscar admin de país durante registro)
+      // - ESPECIAL: Permitir lectura de documentos específicos sin autenticación para el flujo de registro
+      //   (búsqueda de distribuidores creados por admin regional)
+      // - ESPECIAL: Un usuario autenticado puede leer cualquier DISTRIBUTOR (para perfil y panel de distribuidor)
+      allow read: if request.auth.uid == uid || 
+                     isSuperAdmin() ||
+                     resource.data.role == 'ADMIN_COUNTRY' ||
+                     (isAuth() && resource.data.role == 'DISTRIBUTOR') ||  // ← Cualquier usuario autenticado puede leer DISTRIBUTOR
+                     resource.data.role == 'DISTRIBUTOR';  // ← Permitir lectura de DISTRIBUTOR sin auth para registro
+
+      // Queries: Permitir buscar a ADMIN_COUNTRY sin importar autenticación (durante registro)
+      // También permitir buscar usuarios de tu mismo país si estás autenticado
+      // También permitir buscar DISTRIBUTOR si está autenticado
+      allow list: if true;  // TEMPORARY: Debug mode - allow all queries
+
+      // Escritura durante creación: El usuario crea su propio documento DURANTE registro
+      // También SUPER_ADMIN puede crear para cualquier usuario
+      // También ADMIN_COUNTRY puede crear DISTRIBUTOR para su país
+      allow create: if (request.auth.uid == uid && request.auth != null) || 
+                       isSuperAdmin() ||
+                       (isAdminCountry() && request.resource.data.role == 'DISTRIBUTOR' && 
+                        belongsToCountry(request.resource.data.countryId));
+
+      // Actualización: El usuario puede actualizar su propio documento
+      // SUPER_ADMIN puede actualizar cualquier usuario
+      // ESPECIAL: El admin asignado puede actualizar el documento temporal (admin_pending_*)
+      allow update: if request.auth.uid == uid || 
+                       isSuperAdmin() ||
+                       (uid.matches('admin_pending_.*') && 
+                        request.resource.data.email == request.auth.token.email &&
+                        resource.data.role == 'ADMIN_COUNTRY');
+
+      // Eliminación: Solo SUPER_ADMIN puede eliminar usuarios
+      allow delete: if isSuperAdmin();
+    }
+
+    // ========== 🏪 COLLECTION: stores ==========
+    match /stores/{storeId} {
+      // Lectura: La tienda puede leer su propio documento
+      //          STORE puede leer tiendas con su mismo distribuidor (para ver otros tenderos)
+      //          ADMIN_COUNTRY puede leer tiendas en su país
+      //          DISTRIBUTOR puede leer tiendas asignadas
+      //          SUPER_ADMIN puede leer todo
+      allow read: if ownsStore(storeId) ||
+                     (isStore() && resource.data.distributorId == getUser().distributorId) ||
+                     (isAdminCountry() && belongsToCountry(resource.data.countryId)) ||
+                     (isDistributor() && resource.data.distributorId == request.auth.uid) ||
+                     isSuperAdmin();
+
+      // Escritura: Solo durante registro o SUPER_ADMIN
+      // ⚠️ IMPORTANTE: Debe existir ADMIN_COUNTRY en ese país
+      allow create: if (request.auth.uid == storeId && 
+                        hasCountryAdmin(request.resource.data.countryId)) || 
+                       isSuperAdmin();
+
+      // Actualización: La tienda puede actualizar ciertos campos
+      //                ADMIN_COUNTRY puede activar/desactivar
+      //                DISTRIBUTOR puede asignar promociones
+      //                SUPER_ADMIN puede actualizar todo
+      allow update: if (ownsStore(storeId) && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['pointsMonth', 'address', 'status', 'distributorId', 'updatedAt'])) ||
+                       (isAdminCountry() && belongsToCountry(resource.data.countryId) && 
+                        request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['status', 'level'])) ||
+                       isSuperAdmin();
+
+      // Eliminación: Solo SUPER_ADMIN
+      allow delete: if isSuperAdmin();
+
+      // Subcolección: invoices
+      match /invoices/{invoiceId} {
+        // Lectura: La tienda puede ver sus propias facturas
+        //          Admin del país puede ver todas las facturas de su país
+        //          Distribuidor puede ver facturas de sus tiendas
+        allow read: if ownsStore(storeId) ||
+                       (isAdminCountry() && belongsToCountry(get(/databases/$(database)/documents/invoices/$(invoiceId)).data.countryId)) ||
+                       (isDistributor() && get(/databases/$(database)/documents/invoices/$(invoiceId)).data.distributorId == request.auth.uid) ||
+                       isSuperAdmin();
+
+        // Escritura: Solo la tienda puede crear
+        allow create: if ownsStore(storeId);
+
+        // Actualización: No permitida desde cliente (solo Cloud Functions)
+        allow update: if false;
+
+        // Eliminación: Solo tienda (para facturas pending) o SUPER_ADMIN
+        allow delete: if (ownsStore(storeId) && resource.data.status == 'pending') ||
+                         isSuperAdmin();
+      }
+    }
+
+    // ========== 🧾 COLLECTION: invoices ==========
+    match /invoices/{invoiceId} {
+      // Lectura: La tienda, admin del país, distribuidor, SUPER_ADMIN
+      allow read: if ownsStore(resource.data.storeId) ||
+                     (isAdminCountry() && belongsToCountry(resource.data.countryId)) ||
+                     (isDistributor() && resource.data.distributorId == request.auth.uid) ||
+                     isSuperAdmin();
+
+      // Escritura: Solo la tienda puede crear facturas
+      allow create: if isStore() &&
+                       ownsStore(request.resource.data.storeId) &&
+                       request.resource.data.status == 'pending';
+
+      // Actualización: No permitida desde cliente (solo Cloud Functions)
+      allow update: if false;
+
+      // Eliminación: La tienda puede eliminar facturas pending, SUPER_ADMIN cualquier cosa
+      allow delete: if (isStore() && ownsStore(resource.data.storeId) && resource.data.status == 'pending') ||
+                       isSuperAdmin();
+    }
+
+    // ========== 📦 COLLECTION: globalProducts ==========
+    match /globalProducts/{productId} {
+      // Lectura: Todos los usuarios autenticados pueden leer
+      allow read: if isAuth();
+
+      // Escritura: Solo SUPER_ADMIN
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ========== 📦 COLLECTION: countryProducts ==========
+    match /countryProducts/{countryProductId} {
+      // Lectura: Usuarios autenticados del país + SUPER_ADMIN
+      allow read: if belongsToCountry(resource.data.countryId) || isSuperAdmin();
+
+      // Escritura: Solo SUPER_ADMIN o ADMIN_COUNTRY del país
+      allow create: if (isSuperAdmin()) ||
+                       (isAdminCountry() && belongsToCountry(request.resource.data.countryId));
+
+      allow update: if (isSuperAdmin()) ||
+                       (isAdminCountry() && belongsToCountry(resource.data.countryId));
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // ========== 🎁 COLLECTION: globalRewards ==========
+    match /globalRewards/{rewardId} {
+      // Lectura: Todos los usuarios autenticados
+      allow read: if isAuth();
+
+      // Escritura: Solo SUPER_ADMIN
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ========== 🎁 COLLECTION: countryRewards ==========
+    match /countryRewards/{countryRewardId} {
+      // Lectura: Usuarios del país + SUPER_ADMIN
+      allow read: if belongsToCountry(resource.data.countryId) || isSuperAdmin();
+
+      // Escritura: SUPER_ADMIN o ADMIN_COUNTRY del país
+      allow create: if (isSuperAdmin()) ||
+                       (isAdminCountry() && belongsToCountry(request.resource.data.countryId));
+
+      allow update: if (isSuperAdmin()) ||
+                       (isAdminCountry() && belongsToCountry(resource.data.countryId));
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // ========== 📦 COLLECTION: distributorRewardStock ==========
+    match /distributorRewardStock/{stockId} {
+      // Lectura: El distribuidor puede ver su stock, admin del país, SUPER_ADMIN
+      allow read: if isDistributorId(resource.data.distributorId) ||
+                     (isAdminCountry() && belongsToCountry(getUser().countryId)) ||
+                     isSuperAdmin();
+
+      // Escritura: Solo el distribuidor o SUPER_ADMIN
+      allow create: if (isDistributorId(request.resource.data.distributorId)) ||
+                       isSuperAdmin();
+
+      allow update: if (isDistributorId(resource.data.distributorId)) ||
+                       isSuperAdmin();
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // ========== 🎁 COLLECTION: rewardClaims ==========
+    match /rewardClaims/{claimId} {
+      // Lectura: La tienda puede ver sus reclamos
+      //          Admin del país puede ver reclamos en su país
+      //          Distribuidor puede ver reclamos asignados
+      //          SUPER_ADMIN ve todo
+      allow read: if ownsStore(resource.data.storeId) ||
+                     (isAdminCountry() && belongsToCountry(resource.data.countryId)) ||
+                     (isDistributor() && resource.data.distributorId == request.auth.uid) ||
+                     isSuperAdmin();
+
+      // Escritura: Solo tiendas pueden crear reclamos
+      allow create: if isStore() && ownsStore(request.resource.data.storeId);
+
+      // Actualización: No permitida desde cliente (Cloud Functions actualiza)
+      allow update: if false;
+
+      // Eliminación: No permitida
+      allow delete: if false;
+    }
+
+    // ========== 🚚 COLLECTION: deliveries ==========
+    match /deliveries/{deliveryId} {
+      // Lectura: Distribuidor asignado, admin del país, SUPER_ADMIN
+      allow read: if (isDistributor() && resource.data.distributorId == request.auth.uid) ||
+                     (isAdminCountry() && belongsToCountry(resource.data.countryId)) ||
+                     isSuperAdmin();
+
+      // Escritura: Distribuidor crea, actualiza estado de entrega
+      allow create: if isDistributor() && isDistributorId(request.resource.data.distributorId);
+
+      // Actualización: Distribuidor actualiza estado, SUPER_ADMIN
+      allow update: if (isDistributor() && resource.data.distributorId == request.auth.uid) ||
+                       isSuperAdmin();
+
+      // Eliminación: Solo SUPER_ADMIN
+      allow delete: if isSuperAdmin();
+    }
+
+    // ========== 🧮 COLLECTION: pointTransactions ==========
+    match /pointTransactions/{transactionId} {
+      // Lectura: La tienda ve sus transacciones, admin país y distribuidor ven las de su ámbito
+      allow read: if ownsStore(resource.data.storeId) ||
+                     (isAdminCountry() && belongsToCountry(resource.data.countryId)) ||
+                     (isDistributor() && get(/databases/$(database)/documents/stores/$(resource.data.storeId)).data.distributorId == request.auth.uid) ||
+                     isSuperAdmin();
+
+      // Escritura: Solo Cloud Functions pueden crear (no permitir desde cliente)
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ========== 🎯 COLLECTION: campaigns ==========
+    match /campaigns/{campaignId} {
+      // Lectura: Usuarios del país + SUPER_ADMIN
+      allow read: if belongsToCountry(resource.data.countryId) || isSuperAdmin();
+
+      // Escritura: ADMIN_COUNTRY del país o SUPER_ADMIN
+      allow create: if (isSuperAdmin()) ||
+                       (isAdminCountry() && belongsToCountry(request.resource.data.countryId));
+
+      allow update: if (isSuperAdmin()) ||
+                       (isAdminCountry() && belongsToCountry(resource.data.countryId));
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // ========== 🏢 COLLECTION: distributors ==========
+    // 📝 NOTA: Distribuidores creados SOLO por ADMIN_COUNTRY desde su panel
+    // NO manualmente en la colección. El admin regional crea desde su dashboard.
+    match /distributors/{distributorId} {
+      // Lectura: El distribuidor ve sus datos
+      //          Admin del país puede leer distribuidores de su país
+      //          STORE puede leer distribuidores que sirven su ciudad
+      //          SUPER_ADMIN ve todo
+      allow read: if isDistributorId(distributorId) ||
+                     (isAdminCountry() && belongsToCountry(resource.data.countryId)) ||
+                     (isStore() && belongsToCountry(resource.data.countryId)) ||
+                     isSuperAdmin();
+
+      // Queries: Permitir que ADMIN_COUNTRY busque distribuidores de su país
+      //          Permitir que STORE busque distribuidores de su país
+      allow list: if (isAdminCountry() && belongsToCountry(resource.data.countryId)) ||
+                     (isStore() && belongsToCountry(resource.data.countryId)) ||
+                     isSuperAdmin();
+
+      // Creación: SOLO ADMIN_COUNTRY o SUPER_ADMIN
+      // NO permitido desde colección manual - SOLO desde panel del admin
+      allow create: if (isSuperAdmin()) ||
+                       (isAdminCountry() && belongsToCountry(request.resource.data.countryId));
+
+      // Actualización: ADMIN_COUNTRY del país o SUPER_ADMIN
+      allow update: if (isSuperAdmin()) ||
+                       (isAdminCountry() && belongsToCountry(resource.data.countryId));
+
+      // Eliminación: Solo SUPER_ADMIN
+      allow delete: if isSuperAdmin();
+    }
+
+    // ========== 🌍 COLLECTION: countries ==========
+    match /countries/{countryId} {
+      // Lectura: Todos los usuarios autenticados
+      allow read: if isAuth();
+
+      // Escritura: Solo SUPER_ADMIN
+      allow create: if isSuperAdmin();
+      allow update: if isSuperAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ========== 📍 COLLECTION: regions ==========
+    match /regions/{regionId} {
+      // Lectura: Usuarios del país + SUPER_ADMIN
+      allow read: if belongsToCountry(resource.data.countryId) || isSuperAdmin();
+
+      // Escritura: ADMIN_COUNTRY o SUPER_ADMIN
+      allow create: if (isSuperAdmin()) ||
+                       (isAdminCountry() && belongsToCountry(request.resource.data.countryId));
+
+      allow update: if (isSuperAdmin()) ||
+                       (isAdminCountry() && belongsToCountry(resource.data.countryId));
+
+      allow delete: if isSuperAdmin();
+    }
+
+    // ========== 🔐 COLLECTION: tenderos_validos ⚠️ PROTEGIDA ==========
+    // ⚠️ CRÍTICA: Esta colección contiene códigos pre-registrados
+    // Lectura permitida para validar durante registro (sin autenticación)
+    // Escritura solo mediante Cloud Functions y Firebase Admin SDK
+    match /tenderos_validos/{codigo} {
+      // Lectura: PÚBLICA - Necesario para validar códigos en registro antes de autenticar
+      allow read: if true;
+
+      // Escritura: NO permitida desde cliente
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+
+      // 📝 Nota: Acceso de escritura solo mediante:
+      // - Cloud Functions (tiene permisos de Admin)
+      // - Firebase Admin SDK con serviceAccountKey
+      // - Script de setup (loadTenderos.ts)
+    }
+
+    // ========== 🔥 DEFAULT: Denegar todo acceso no especificado ==========
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

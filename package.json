@@ -1,17 +1,28 @@
 {
   "name": "cielo-promo",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "load-tenderos": "npx ts-node scripts/loadTenderos.ts",
+    "update-tenderos": "node scripts/updateTenderosValidos.js",
+    "update-users": "node scripts/updateUsersWithDistributor.js",
+    "sync-stores": "node scripts/syncStoresWithUsers.js",
+    "firebase:deploy": "firebase deploy",
+    "firebase:deploy:rules": "firebase deploy --only firestore:rules",
+    "firebase:deploy:functions": "firebase deploy --only functions",
+    "firebase:logs": "firebase functions:log"
   },
   "dependencies": {
+    "firebase": "^12.8.0",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-dropzone": "^14.4.0",
+    "react-firebase-hooks": "^5.1.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -20,7 +31,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "firebase-admin": "^13.6.0",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

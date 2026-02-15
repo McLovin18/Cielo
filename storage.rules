@@ -1,0 +1,36 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Permitir lectura pública de fotos de perfil
+    match /profile-photos/{uid}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Permitir subidas de documentos OCR por usuarios autenticados
+    match /ocr-documents/{userId}/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Carpeta temporal para uploads
+    match /uploads/{userId}/{allPaths=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Carpeta de facturas
+    match /invoices/{userId}/{allPaths=**} {
+      allow read: if request.auth != null && (request.auth.uid == userId || request.auth.token.role == 'admin' || request.auth.token.role == 'super-admin');
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Denegar todo lo demás
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
