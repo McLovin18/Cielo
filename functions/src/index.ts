@@ -10,11 +10,11 @@ import * as functions from 'firebase-functions';
 export const scheduledAutoAssignPendingClaims = onSchedule(
   {
     schedule: 'every 5 minutes',
-    timeZone: 'America/Bogota', // Ajusta según tu zona
+    timeZone: 'America/Bogota',
   },
-  async (event) => {
+  async () => {
     await autoAssignPendingClaims();
-    return null;
+    // No retornes nada
   }
 );
 import * as admin from 'firebase-admin';
