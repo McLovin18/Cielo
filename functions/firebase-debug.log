@@ -3445,3 +3445,19 @@ Issues? Report them at https://github.com/firebase/firebase-tools/issues and att
 [warn] !  functions: Your requested "node" version "20" doesn't match your global version "22". Using node@22 from host. 
 [debug] [2026-02-17T17:11:50.179Z] Could not find functions.yaml. Must use http discovery
 [debug] [2026-02-17T17:11:50.184Z] Found firebase-functions binary at 'C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\node_modules\.bin\firebase-functions'
+[info] Serving at port 8009
+
+[error] ReferenceError: Cannot access 'functions' before initialization
+    at Object.<anonymous> (C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\lib\index.js:10:44)
+    at Module._compile (node:internal/modules/cjs/loader:1546:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1691:10)
+    at Module.load (node:internal/modules/cjs/loader:1317:32)
+    at Module._load (node:internal/modules/cjs/loader:1127:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:315:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:217:24)
+    at Module.require (node:internal/modules/cjs/loader:1339:12)
+    at require (node:internal/modules/helpers:125:16)
+    at loadModule (C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\node_modules\firebase-functions\lib\runtime\loader.js:40:16)
+
+[debug] [2026-02-17T17:11:50.804Z] Got response code 400; body Failed to generate manifest from function source: ReferenceError: Cannot access 'functions' before initialization
+[error] !!  functions: Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error {"metadata":{"emulator":{"name":"functions"},"message":"Failed to load function definition from source: FirebaseError: Functions codebase could not be analyzed successfully. It may have a syntax or runtime error"}}

@@ -448,8 +448,7 @@ export { onRewardClaimStatusUpdate };
  * Cloud Function: approveInvoice
  * Permite a Distribuidores y Administradores aprobar o rechazar facturas pendientes.
  */
-export const approveInvoice = functions.https.onCall(async (data, context) => {
-    // 1. Validar autenticación
+export const approveInvoice = functions.https.onCall(async (data: any, context: any) => {    // 1. Validar autenticación
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'Debe estar autenticado.');
     }
@@ -602,7 +601,7 @@ export const approveInvoice = functions.https.onCall(async (data, context) => {
  * - Aplicar puntos calculados
  * - Actualizar tienda
  */
-export const approveInvoiceAdmin = functions.https.onCall(async (data, context) => {
+export const approveInvoiceAdmin = functions.https.onCall(async (data: any, context: any) => {
   try {
     // Verificar que el usuario está autenticado
     if (!context.auth) {
@@ -687,7 +686,7 @@ export const approveInvoiceAdmin = functions.https.onCall(async (data, context) 
  * Cloud Function: rejectInvoiceAdmin
  * Trigger: Cuando un admin rechaza una factura
  */
-export const rejectInvoiceAdmin = functions.https.onCall(async (data, context) => {
+export const rejectInvoiceAdmin = functions.https.onCall(async (data: any, context: any) => {
   try {
     if (!context.auth) {
       throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -782,7 +781,7 @@ async function checkAndAssignRewards(storeId: string, totalPoints: number): Prom
  * Cloud Function: claimReward
  * Trigger: Cuando un tendero reclama un premio
  */
-export const claimReward = functions.https.onCall(async (data, context) => {
+export const claimReward = functions.https.onCall(async (data:any, context:any) => {
   try {
     if (!context.auth) {
       throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
@@ -866,7 +865,7 @@ export const claimReward = functions.https.onCall(async (data, context) => {
  * - El sistema valida en el registro que ya es admin
  * - El CORAZÓN DEL SISTEMA - sin esto, no hay tenderos
  */
-export const assignCountryAdmin = functions.https.onCall(async (data, context) => {
+export const assignCountryAdmin = functions.https.onCall(async (data:any, context:any) => {
   try {
     // Verificar que está autenticado
     if (!context.auth) {
@@ -971,7 +970,7 @@ export const assignCountryAdmin = functions.https.onCall(async (data, context) =
  * - Si está registrado, también eliminar de Firebase Auth
  * - ⚠️ CUIDADO: Los tenderos de ese país quedarán huérfanos
  */
-export const deleteCountryAdmin = functions.https.onCall(async (data, context) => {
+export const deleteCountryAdmin = functions.https.onCall(async (data:any, context:any) => {
   try {
     // Verificar que está autenticado
     if (!context.auth) {
@@ -1052,7 +1051,7 @@ export const deleteCountryAdmin = functions.https.onCall(async (data, context) =
  * - Crear documentos en Firestore
  * - Garantizar unicidad de código
  */
-export const registerStore = functions.https.onCall(async (data) => {
+export const registerStore = functions.https.onCall(async (data:any) => {
   const { email, password, storeCode, phone, countryId, ownerName } = data;
 
   // Validaciones básicas
