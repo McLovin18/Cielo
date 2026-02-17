@@ -317,7 +317,7 @@ export const calculateInvoicePoints = onDocumentCreated('invoices/{invoiceId}', 
  */
 export const confirmInvoice = functions.https.onCall(async (data, context) => {
     // 1. Validar autenticación
-    if (!context.auth) {
+    if (!context || !context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'Debe estar autenticado.');
     }
 
