@@ -1,5 +1,6 @@
 import { autoAssignPendingClaims } from './autoAssignPendingClaims';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import * as functions from 'firebase-functions';
 
 /**
@@ -147,17 +148,16 @@ export const analyzeInvoice = functions.https.onCall(async (data, context) => {
  * - Crear registro de transacción
  * - Verificar si hay premios automáticos ganados
  */
-export const calculateInvoicePoints = functions.firestore
-  .document('invoices/{invoiceId}')
-  .onCreate(async (snap, context) => {
-    try {
-      const invoice = snap.data();
-      const invoiceId = context.params.invoiceId;
+export const calculateInvoicePoints = onDocumentCreated('invoices/{invoiceId}', async (event) => {
+  try {
+    const snap = event.data;
+    const invoice = snap ? snap.data() : undefined;
+    const invoiceId = event.params.invoiceId;
 
-      // Validar datos básicos
-      if (!invoice.storeId || invoice.status !== 'pending') {
-        console.log('Invoice validation failed');
-        return;
+    // Validar datos básicos
+    if (!invoice || !invoice.storeId || invoice.status !== 'pending') {
+      console.log('Invoice validation failed');
+      return;
       }
 
       // Validar si la factura ya ha sido registrada anteriormente (Prevención de Fraude)
@@ -176,12 +176,14 @@ export const calculateInvoicePoints = functions.firestore
 
         if (duplicateDocs.length > 0) {
            console.warn(`⚠️ Fraude detectado: Factura ${invoice.invoiceNumber} ya existe. Rechazando.`);
-           await snap.ref.update({
-             status: 'rejected',
-             rejectedReason: 'Factura duplicada: Este número de factura ya ha sido registrado.',
-             approvedAt: Timestamp.now(),
-             pointsEarned: 0
-           });
+           if (snap) {
+             await snap.ref.update({
+               status: 'rejected',
+               rejectedReason: 'Factura duplicada: Este número de factura ya ha sido registrado.',
+               approvedAt: Timestamp.now(),
+               pointsEarned: 0
+             });
+           }
            return null; // Detener ejecución
         }
       }
@@ -266,11 +268,13 @@ export const calculateInvoicePoints = functions.firestore
 
       // Actualizar factura con puntos calculados (PENDIENTE DE APROBACIÓN)
       // YA NO SE APRUEBA AUTOMÁTICAMENTE
-      await snap.ref.update({
-        pointsEarned,
-        // status: 'pending', // Ya debería venir como pending
-        // approvedAt: ... // No se aprueba aún
-      });
+      if (snap) {
+        await snap.ref.update({
+          pointsEarned,
+          // status: 'pending', // Ya debería venir como pending
+          // approvedAt: ... // No se aprueba aún
+        });
+      }
 
       /* 
       // LÓGICA ANTERIOR (DESACTIVADA): Aprobaba automáticamente
