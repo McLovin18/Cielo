@@ -58,7 +58,7 @@ export default function StoreDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Meta del Mes */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
@@ -68,13 +68,13 @@ export default function StoreDashboard() {
               <div className="flex justify-between mb-2">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Progreso:</span>
                 <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                  {storeData?.pointsMonth || 0} / 1000 puntos
+                  {storeData?.pointsMonth || 0} / 2000 puntos
                 </span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
                   className="bg-blue-600 dark:bg-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${Math.min((storeData?.pointsMonth || 0) / 1000 * 100, 100)}%` }}
+                  style={{ width: `${Math.min((storeData?.pointsMonth || 0) / 2000 * 100, 100)}%` }}
                 />
               </div>
             </div>
@@ -90,20 +90,6 @@ export default function StoreDashboard() {
               {storeData?.pointsTotal || 0}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">Puntos acumulados</p>
-          </div>
-
-          {/* Nivel */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
-              🏆 Tu Nivel
-            </h3>
-            <div className="text-3xl font-bold mb-2">
-              {storeData?.level === 'bronze' && '🥉 Bronce'}
-              {storeData?.level === 'silver' && '🥈 Plata'}
-              {storeData?.level === 'gold' && '🥇 Oro'}
-              {storeData?.level === 'platinum' && '💎 Platino'}
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Nivel actual de tu tienda</p>
           </div>
         </div>
 

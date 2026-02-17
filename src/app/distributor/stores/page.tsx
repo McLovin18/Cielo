@@ -33,22 +33,40 @@ export default function StoresPage() {
     try {
       setLoading(true);
       // Los tenderos asignados a un distribuidor se cargan desde la colección de stores
+      // FIX: Usar distributorId (código de negocio) en lugar de uid, si existe.
+      const distributorCode = currentUser?.distributorId || currentUser?.uid;
+      
+      console.log('🔍 Buscando tenderos para distribuidor:', distributorCode);
+
+      if (!distributorCode) {
+        console.warn('⚠️ No hay código de distribuidor disponible');
+        setLoading(false);
+        return;
+      }
+
       const storesQuery = query(
         collection(db, 'stores'),
-        where('distributorId', '==', currentUser?.uid)
+        where('distributorId', '==', distributorCode)
       );
       const snapshot = await getDocs(storesQuery);
       
       // Obtener los datos de usuario asociados
       const storesData = await Promise.all(
         snapshot.docs.map(async (storeDoc) => {
-          const userData = await getDocs(
-            query(collection(db, 'users'), where('uid', '==', storeDoc.data().userId))
-          );
+          const storeData = storeDoc.data();
+          let userData = null;
+
+          if (storeData.userId) {
+             const userSnap = await getDocs(
+               query(collection(db, 'users'), where('uid', '==', storeData.userId))
+             );
+             if (!userSnap.empty) userData = userSnap.docs[0].data();
+          }
+
           return {
-            ...storeDoc.data(),
+            ...storeData,
             uid: storeDoc.id,
-            userData: userData.docs[0]?.data(),
+            userData: userData,
           };
         })
       );

@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, documentId } from 'firebase/firestore';
 import { User } from '@/types';
 
 // Helper para convertir Timestamp a Date
@@ -21,6 +21,7 @@ export default function StoresPage() {
   useRequireAuth(['ADMIN_COUNTRY']);
   const { currentUser } = useAuth();
   const [stores, setStores] = useState<(User & { uid: string })[]>([]);
+  const [distributorNames, setDistributorNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [selectedStore, setSelectedStore] = useState<(User & { uid: string }) | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,17 +35,55 @@ export default function StoresPage() {
   const loadStores = async () => {
     try {
       setLoading(true);
+
+      // 1. Obtener stores
       const storesQuery = query(
         collection(db, 'users'),
         where('role', '==', 'STORE'),
         where('countryId', '==', currentUser?.countryId)
       );
       const snapshot = await getDocs(storesQuery);
-      const storesList = snapshot.docs.map((doc) => ({
-        ...doc.data() as User,
-        uid: doc.id,
-      }));
+      
+      // Filtrar usuarios que tienen rol STORE pero NO tienen storeCode (posibles distribuidores mal registrados)
+      const storesList = snapshot.docs
+        .map((doc) => ({
+          ...doc.data() as User,
+          uid: doc.id,
+        }))
+        .filter((store) => store.storeCode); // Solo mostrar si tiene código de tienda
+
       setStores(storesList);
+
+      // 2. Obtener nombres de distribuidores
+      const distributorIds = [...new Set(storesList.map(s => s.distributorId).filter(Boolean))];
+      
+      if (distributorIds.length > 0) {
+        // Opción segura: traer todos los distribuidores del país y mapear
+        // (Evita límites de 'in' query y múltiples lecturas)
+        const distQuery = query(
+          collection(db, 'users'),
+          where('role', '==', 'DISTRIBUTOR'),
+          where('countryId', '==', currentUser?.countryId)
+        );
+        const distSnapshot = await getDocs(distQuery);
+        
+        const namesMap: Record<string, string> = {};
+        distSnapshot.forEach(doc => {
+          const data = doc.data();
+          const displayName = data.distributorId 
+            ? `${data.name} - ${data.distributorId}`
+            : data.name;
+
+          // Mapear por ID de documento (por si acaso)
+          namesMap[doc.id] = displayName;
+          // Mapear por campo custom 'distributorId' (ej: DIST-ECU-02) - ESTO ES LO CRÍTICO
+          if (data.distributorId) {
+            namesMap[data.distributorId] = displayName;
+          }
+        });
+        setDistributorNames(namesMap);
+      }
+
     } catch (error) {
       console.error('Error cargando tenderos:', error);
     } finally {
@@ -99,6 +138,16 @@ export default function StoresPage() {
                 <p className="text-sm text-gray-600 dark:text-gray-400 break-all mb-3">
                   {store.email}
                 </p>
+                
+                {/* Distribuidor Asignado */}
+                {store.distributorId && (
+                  <div className="mb-3 px-3 py-1 bg-orange-50 dark:bg-orange-900/20 rounded-lg inline-block">
+                    <p className="text-xs text-orange-600 dark:text-orange-400 font-medium flex items-center gap-1">
+                      🚚 {distributorNames[store.distributorId] || 'Cargando...'}
+                    </p>
+                  </div>
+                )}
+
                 <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     Registrado {toDate(store.createdAt).toLocaleDateString('es-ES')}
@@ -132,6 +181,12 @@ export default function StoresPage() {
                 <p className="text-sm text-gray-600 dark:text-gray-400">Dirección</p>
                 <p className="font-semibold text-gray-900 dark:text-white">
                   {selectedStore.address || 'No especificada'}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Distribuidor</p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {selectedStore.distributorId ? (distributorNames[selectedStore.distributorId] || 'Desconocido') : 'No asignado'}
                 </p>
               </div>
             </div>

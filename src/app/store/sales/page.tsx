@@ -116,7 +116,7 @@ export default function StoreSalesPage() {
                         ${invoice.totalAmount.toFixed(2)}
                       </td>
                       <td className="px-6 py-4 text-sm font-medium text-blue-600 dark:text-blue-400">
-                        +{invoice.totalPoints} pts
+                        +{invoice.pointsEarned} pts
                       </td>
                       <td className="px-6 py-4 text-sm">
                         <span
@@ -158,7 +158,7 @@ export default function StoreSalesPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
             <p className="text-gray-600 dark:text-gray-400 text-sm">Puntos Ganados</p>
             <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-              +{invoices.reduce((sum, inv) => sum + inv.totalPoints, 0)}
+              +{invoices.reduce((sum, inv) => sum + inv.pointsEarned, 0)}
             </p>
           </div>
         </div>

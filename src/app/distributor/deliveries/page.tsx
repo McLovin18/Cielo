@@ -33,6 +33,7 @@ export default function DistributorDeliveriesPage() {
           const q = query(collection(db, 'rewardClaims'), ...constraints);
           const snapshot = await getDocs(q);
           const data = snapshot.docs.map(d => ({ ...d.data(), id: d.id } as RewardClaim & { id: string }));
+          console.log('Deliveries recuperados para distribuidor', targetId, data);
           setDeliveries(data);
         } catch (err) {
           console.error('Error fetching deliveries:', err);
@@ -81,10 +82,10 @@ export default function DistributorDeliveriesPage() {
   }
 
   // Filter based on RewardClaim specific statuses
-  // 'in_assignment' -> New/Pending for distributor
+  // 'assigned' o 'in_assignment' -> New/Pending for distributor
   // 'in_transit' -> On the truck
   // 'delivered' -> Done
-  const assigned = deliveries.filter(d => d.status === 'in_assignment');
+  const assigned = deliveries.filter(d => d.status === 'assigned' || d.status === 'in_assignment');
   const inTransit = deliveries.filter(d => d.status === 'in_transit');
   const delivered = deliveries.filter(d => d.status === 'delivered');
 

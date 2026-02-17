@@ -31,9 +31,11 @@ if (process.env.NODE_ENV === 'development') {
     // Descomenta las líneas siguientes para activar los emuladores:
     // connectAuthEmulator(auth, 'http://127.0.0.1:9099');
     // connectFirestoreEmulator(db, '127.0.0.1', 8080);
-    connectStorageEmulator(storage, '127.0.0.1', 9199);
+    // connectStorageEmulator(storage, '127.0.0.1', 9199);
+    
+    // SOLO Functions Emulator (el resto conectará a Producción)
     connectFunctionsEmulator(functions, '127.0.0.1', 5001);
-    console.log('🔧 Conectado a Firebase Functions y Storage Emulator');
+    console.log('🔧 Conectado a Firebase Functions Emulator (Auth/Firestore/Storage en Producción)');
 }
 
 export default app;

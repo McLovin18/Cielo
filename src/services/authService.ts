@@ -5,7 +5,7 @@ import {
   setPersistence,
   browserLocalPersistence,
 } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { auth, db, functions } from '@/lib/firebase';
 import {
   doc,
   setDoc,
@@ -17,6 +17,7 @@ import {
   updateDoc,
   Timestamp,
 } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { User, Store, Distributor, ValidStore } from '@/types';
 
 export const authService = {
@@ -54,135 +55,62 @@ export const authService = {
     phone: string,
     countryId: string,
     ownerName: string,
-    distribuidorId?: string  // ← Opcional: tendero puede elegir distribuidor
+    distribuidorId?: string
   ): Promise<{ userId: string; storeId: string }> {
     try {
-      // PASO 0: VALIDAR QUE EXISTE ADMIN EN EL PAÍS 💡 CORAZÓN DEL SISTEMA
-      console.log(`❤️  Verificando si existe admin en el país: ${countryId}`);
-      const hasAdmin = await this.hasCountryAdmin(countryId);
+      console.log(`📝 Calling Backend: registerStore function`);
       
-      if (!hasAdmin) {
-        const error = new Error(
-          `No hay admin asignado en este país. Solicita al SuperAdmin que designe un administrador.`
-        );
-        (error as any).code = 'NO_ADMIN_IN_COUNTRY';
-        throw error;
-      }
-      console.log(`✅ Admin verificado para el país: ${countryId}`);
-
-      // PASO 1: Validar código de tendero
-      console.log(`🔍 Validando código: ${storeCode}`);
-
-      const tenderoRef = doc(db, 'tenderos_validos', storeCode.toUpperCase());
-      let tenderoSnap;
-      
-      try {
-        tenderoSnap = await getDoc(tenderoRef);
-      } catch (error: any) {
-        // Error al acceder a tenderos_validos
-        console.error('❌ Error al validar código:', error);
-        throw new Error(
-          `El código de tendero "${storeCode}" no existe o no es válido. Por favor verifica e intenta de nuevo.`
-        );
-      }
-
-      if (!tenderoSnap.exists()) {
-        throw new Error(
-          `❌ El código de tendero "${storeCode}" no existe. Por favor verifica e intenta de nuevo.`
-        );
-      }
-
-      const tenderoData = tenderoSnap.data() as ValidStore & {
-        utilizado: boolean;
-        registeredStoreId: string | null;
-      };
-
-      if (!tenderoData.activo) {
-        throw new Error('⚠️ Este código de tendero está inactivo. Contacta a tu distribuidor.');
-      }
-
-      if (tenderoData.utilizado && tenderoData.registeredStoreId) {
-        throw new Error(
-          `⚠️ El código "${storeCode}" ya ha sido registrado. Si es un error, contacta a soporte.`
-        );
-      }
-
-      // PASO 2: Crear cuenta de autenticación
-      console.log(`✅ Código válido. Creando cuenta...`);
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const userId = userCredential.user.uid;
-      console.log(`✅ Cuenta Firebase creada`);
-
-      // PASO 3: Crear documento de usuario
-      const userData: User = {
-        uid: userId,
-        email: email,
-        phone: phone,
-        name: ownerName,
-        role: 'STORE',
-        storeId: userId,
-        storeCode: storeCode.toUpperCase(),  // ← Guardar el código para búsqueda inversa
-        countryId: countryId,
-        city: tenderoData.ciudad,  // ← Guardar la ciudad del tendero válido
-        distributorId: tenderoData.distribuidorId,  // ← Guardar el distribuidor automáticamente
-        status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      await setDoc(doc(db, 'users', userId), userData);
-      console.log(`✅ Usuario creado en colección /users`);
-
-      // PASO 4: Crear documento de tienda
-      // El distribuidor se asigna automáticamente del tendero válido
-      const storeData: Store = {
-        id: userId,
-        storeCode: storeCode.toUpperCase(),
-        countryId: countryId,
-        city: tenderoData.ciudad,  // ← Guardar ciudad en tienda también
-        regionId: tenderoData.ciudad,
-        distributorId: tenderoData.distribuidorId,  // ← Distribuidor automático del JSON
-        name: ownerName,
-        ownerName: ownerName,
-        phone: phone,
-        address: '',
-        level: 'bronze',
-        pointsTotal: 0,
-        pointsMonth: 0,
-        monthStart: new Date(),
-        status: 'active',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      await setDoc(doc(db, 'stores', userId), storeData);
-      console.log(`✅ Tienda creada en colección /stores`);
-
-      // PASO 5: Marcar código como utilizado
-      await updateDoc(tenderoRef, {
-        utilizado: true,
-        registeredStoreId: userId,
-        registeredAt: Timestamp.now(),
+      const registerFn = httpsCallable(functions, 'registerStore');
+      const result: any = await registerFn({
+        email,
+        password,
+        storeCode, // Enviaremos el código para que el backend lo valide y marque
+        phone,
+        countryId,
+        ownerName,
+        distribuidorId
       });
-      console.log(`✅ Código marcado como utilizado`);
+      
+      const userId = result.data.userId;
+      console.log(`✅ Backend registration success. UserID: ${userId}`);
 
-      console.log(`✅ ¡Tendero registrado exitosamente: ${storeCode}`);
+      // Auto-Sign In después del registro exitoso
+      await signInWithEmailAndPassword(auth, email, password);
+      console.log(`✅ Auto-login success`);
+      
       return { userId, storeId: userId };
     } catch (error: any) {
-      console.error('❌ Error al registrar tendero:', error.message || error);
+      console.error('❌ Error al registrar tendero (Backend):', error.message || error);
       
-      // Limpiar error genérico de Firebase
-      if (error.code === 'auth/email-already-in-use') {
+      // Mapeo básico de errores backend a mensajes amigables
+      const msg = error.message || '';
+      const code = error.code || '';
+
+      // Si el código existe, el backend envía "already-exists"
+      if (code === 'already-exists' || msg.includes('already-exists') || msg.includes('ya ha sido registrado')) {
+         throw new Error('Este código de tienda ya ha sido registrado por otro usuario.');
+      }
+
+      if (msg.includes('email-already-exists') || msg.includes('El email ya está registrado')) {
         throw new Error('Este email ya está registrado en el sistema.');
       }
-      if (error.code === 'auth/weak-password') {
-        throw new Error('La contraseña debe tener al menos 6 caracteres.');
+      
+      if (msg.includes('not-found') || msg.includes('no existe')) {
+        throw new Error('El código de tienda no es válido.');
       }
-      if (error.code === 'auth/invalid-email') {
-        throw new Error('El email no es válido.');
+      
+      if (msg.includes('failed-precondition') || msg.includes('inactivo')) {
+        throw new Error('El código de tienda está inactivo o no hay administrador en el país.');
+      }
+
+      if (msg === 'INTERNAL') {
+        throw new Error('Error interno del servidor. Por favor verifica que el código y tus datos sean correctos e intenta de nuevo.');
       }
       
       throw error;
     }
   },
+
 
   // ===== REGISTRAR USUARIO SIN CÓDIGO (ADMIN/DISTRIBUIDOR) =====
   async registerUserWithoutCode(

@@ -5,22 +5,13 @@ import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useAuth } from '@/context/AuthContext';
 import { invoiceService } from '@/services/invoiceService';
 import Link from 'next/link';
-
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  supplierName: string;
-  totalAmount: number;
-  status: 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
-  createdAt: Date;
-  imageUrl: string;
-}
+import { Invoice } from '@/types';
 
 export default function InvoicesPage() {
   const { currentUser, loading } = useRequireAuth(['STORE']);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(true);
-  const [filter, setFilter] = useState<'ALL' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'pending' | 'approved' | 'rejected'>('ALL');
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -33,10 +24,10 @@ export default function InvoicesPage() {
   const loadInvoices = async () => {
     try {
       setLoadingInvoices(true);
-      // TODO: Implement getInvoicesByStore in invoiceService
-      // const data = await invoiceService.getInvoicesByStore(currentUser!.uid);
-      // setInvoices(data);
-      setInvoices([]);
+      if (currentUser?.uid) {
+        const data = await invoiceService.getStoreInvoices(currentUser.uid);
+        setInvoices(data);
+      }
     } catch (error) {
       console.error('Error loading invoices:', error);
     } finally {
@@ -58,11 +49,11 @@ export default function InvoicesPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'PENDING_REVIEW':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'APPROVED':
+      case 'approved':
         return 'bg-green-100 text-green-800';
-      case 'REJECTED':
+      case 'rejected':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -71,11 +62,11 @@ export default function InvoicesPage() {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'PENDING_REVIEW':
+      case 'pending':
         return '⏳ En Revisión';
-      case 'APPROVED':
+      case 'approved':
         return '✅ Aprobada';
-      case 'REJECTED':
+      case 'rejected':
         return '❌ Rechazada';
       default:
         return 'Desconocido';
@@ -112,34 +103,34 @@ export default function InvoicesPage() {
               Todas ({invoices.length})
             </button>
             <button
-              onClick={() => setFilter('PENDING_REVIEW')}
+              onClick={() => setFilter('pending')}
               className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'PENDING_REVIEW'
+                filter === 'pending'
                   ? 'bg-yellow-600 text-white'
                   : 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
               }`}
             >
-              En Revisión ({invoices.filter((i) => i.status === 'PENDING_REVIEW').length})
+              En Revisión ({invoices.filter((i) => i.status === 'pending').length})
             </button>
             <button
-              onClick={() => setFilter('APPROVED')}
+              onClick={() => setFilter('approved')}
               className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'APPROVED'
+                filter === 'approved'
                   ? 'bg-green-600 text-white'
                   : 'bg-green-50 text-green-700 hover:bg-green-100'
               }`}
             >
-              Aprobadas ({invoices.filter((i) => i.status === 'APPROVED').length})
+              Aprobadas ({invoices.filter((i) => i.status === 'approved').length})
             </button>
             <button
-              onClick={() => setFilter('REJECTED')}
+              onClick={() => setFilter('rejected')}
               className={`px-4 py-2 rounded-lg font-medium transition ${
-                filter === 'REJECTED'
+                filter === 'rejected'
                   ? 'bg-red-600 text-white'
                   : 'bg-red-50 text-red-700 hover:bg-red-100'
               }`}
             >
-              Rechazadas ({invoices.filter((i) => i.status === 'REJECTED').length})
+              Rechazadas ({invoices.filter((i) => i.status === 'rejected').length})
             </button>
           </div>
         </div>
@@ -168,9 +159,6 @@ export default function InvoicesPage() {
                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
                       Número
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                      Proveedor
-                    </th>
                     <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">
                       Total
                     </th>
@@ -190,9 +178,6 @@ export default function InvoicesPage() {
                     <tr key={invoice.id} className="border-b hover:bg-gray-50 transition">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
                         #{invoice.invoiceNumber}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {invoice.supplierName}
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-gray-900 text-right">
                         ${invoice.totalAmount.toFixed(2)}
@@ -249,9 +234,9 @@ export default function InvoicesPage() {
               {/* Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Proveedor</p>
-                  <p className="font-semibold text-gray-900">
-                    {selectedInvoice.supplierName}
+                  <p className="text-sm text-gray-600">Puntos Ganados</p>
+                  <p className="font-semibold text-green-600">
+                    +{selectedInvoice.pointsEarned || 0} pts
                   </p>
                 </div>
                 <div>
@@ -273,6 +258,18 @@ export default function InvoicesPage() {
                   </p>
                 </div>
               </div>
+
+              {/* Rejection Reason */}
+              {selectedInvoice.status === 'rejected' && selectedInvoice.rejectedReason && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h3 className="text-sm font-semibold text-red-800 mb-1">
+                    Motivo del rechazo
+                  </h3>
+                  <p className="text-sm text-red-700">
+                    {selectedInvoice.rejectedReason}
+                  </p>
+                </div>
+              )}
 
               {/* Image */}
               {selectedInvoice.imageUrl && (

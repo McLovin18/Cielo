@@ -61,6 +61,22 @@ export interface DistributorRewardStock {
 }
 
 class RewardService {
+    // Crear stock de recompensa para distribuidor
+    async createDistributorStock(stock: Omit<DistributorRewardStock, 'id' | 'updatedAt'>) {
+      try {
+        const stockRef = doc(collection(db, 'distributorRewardStock'));
+        const data: DistributorRewardStock = {
+          id: stockRef.id,
+          ...stock,
+          updatedAt: new Date(),
+        };
+        await setDoc(stockRef, data);
+        return data;
+      } catch (error) {
+        console.error('Error creating distributor stock:', error);
+        throw error;
+      }
+    }
   // ===== PREMIOS GLOBALES (SUPER_ADMIN) =====
 
   async createGlobalReward(reward: Omit<GlobalReward, 'id' | 'createdAt' | 'updatedAt'>) {
@@ -240,7 +256,8 @@ class RewardService {
         pointsDeducted: reward.pointsRequired,
         countryId: user.countryId,
         distributorId: user.distributorId, // Assign to current distributor
-        status: 'pending', // Waiting for distributor
+        status: 'assigned', // Directo a assigned porque el tendero ya tiene distribuidor
+        assignedAt: new Date(),
         // Only add description if it exists (it's optional in some interfaces)
       });
 

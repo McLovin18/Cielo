@@ -14,8 +14,9 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '@/lib/firebase';
+import { db, storage, functions } from '@/lib/firebase'; // Ensure functions is exported from firebase.ts
 import { Invoice } from '@/types';
+import { httpsCallable } from 'firebase/functions';
 
 interface CreateInvoiceData {
   storeId: string;
@@ -59,6 +60,39 @@ export const invoiceService = {
       const uploadResult = await uploadBytes(storageRef, data.imageFile);
       const imageUrl = await getDownloadURL(uploadResult.ref);
 
+      // HYBRID FIX: In development mode (where we connect to Prod Firestore but run Local Functions),
+      // Firestore Triggers DO NOT FIRE. We must call a Callable Function to confirm and calculate points.
+      if (process.env.NODE_ENV === 'development') {
+          console.log("⚡ HYBRID MODE: Calling 'confirmInvoice' directly to ensure processing");
+          const confirmInvoice = httpsCallable(functions, 'confirmInvoice');
+          try {
+            const result: any = await confirmInvoice({
+              storeId: data.storeId,
+              storeName: data.storeName,
+              countryId: data.countryId,
+              invoiceNumber: data.invoiceNumber || new Date().getTime().toString(),
+              imageUrl,
+              products: data.products,
+              totalAmount: data.totalAmount
+            });
+            return { invoiceId: result.data.invoiceId };
+          } catch (fnError: any) {
+             // Si el error es de validación (duplicate, invalid-arg, etc), NO hacer fallback
+             // Queremos que el error suba a la UI
+             if (fnError.message && (
+                 fnError.message.includes('ya existe') || 
+                 fnError.code === 'already-exists' ||
+                 fnError.code === 'failed-precondition'
+             )) {
+                 throw fnError;
+             }
+
+             console.error("Hybrid function call failed (network/internal), falling back to direct write:", fnError);
+             // Fallthrough to legacy method ONLY if function is unreachable or internal error
+          }
+      }
+
+      // Legacy/Production method (if triggers are deployed)
       // Crear documento de factura
       const invoiceData: Omit<Invoice, 'id' | 'distributorId'> = {
         storeId: data.storeId,
@@ -68,7 +102,7 @@ export const invoiceService = {
         invoiceDate: new Date(),
         imageUrl,
         totalAmount: data.totalAmount,
-        totalPoints: 0, // Se calculará en Cloud Function
+        pointsEarned: 0, // Se calculará en Cloud Function
         status: 'pending',
         createdAt: new Date(),
       };
@@ -77,9 +111,11 @@ export const invoiceService = {
         ...invoiceData,
         distributorId: '', // Será asignado por Cloud Function
       });
-
+      
       return { invoiceId: docRef.id };
+
     } catch (error) {
+      console.error('Error creating invoice:', error);
       throw error;
     }
   },
@@ -291,7 +327,7 @@ export const invoiceService = {
       querySnapshot.forEach(doc => {
         const data = doc.data() as Invoice;
         totalSales += data.totalAmount;
-        totalPoints += data.totalPoints;
+        totalPoints += data.pointsEarned;
         totalInvoices++;
       });
 

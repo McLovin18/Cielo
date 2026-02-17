@@ -199,12 +199,17 @@ export default function UploadInvoicePage() {
       );
 
       setSuccessMessage(
-        `✅ Factura #${invoiceNumber} cargada exitosamente!`
+        `✅ Factura #${invoiceNumber} enviada a revisión. Un distribuidor verificará los puntos pronto.`
       );
       setStep('success');
 
     } catch (err: any) {
-      setError(`❌ Error: ${err.message}`);
+        // Validación de duplicados
+        if (err.message && (err.message.includes('ya existe') || err.message.includes('already-exists'))) {
+             setError('❌ No se puede validar la factura porque los puntos de este número de factura ya fueron adquiridos antes.');
+        } else {
+             setError(`❌ Error: ${err.message}`);
+        }
     } finally {
       setUploading(false);
     }
@@ -341,8 +346,9 @@ export default function UploadInvoicePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">N° Factura</label>
                     <input 
                       value={invoiceNumber} 
-                      onChange={e => setInvoiceNumber(e.target.value)}
-                      className="w-full border rounded px-3 py-2"
+                      disabled={true}
+                      className="w-full border rounded px-3 py-2 bg-gray-100/50 text-gray-600 cursor-not-allowed"
+                      title="El número de factura es extraído automáticamente y no puede ser editado."
                     />
                   </div>
                   <div>
@@ -404,6 +410,13 @@ export default function UploadInvoicePage() {
                   <span className="font-medium text-green-800">Total Calculado</span>
                   <span className="font-bold text-2xl text-green-700">${totalAmount.toFixed(2)}</span>
                </div>
+
+               {error && (
+                  <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                      <strong className="font-bold block mb-1">No se pudo enviar:</strong>
+                      <span className="block sm:inline">{error}</span>
+                  </div>
+               )}
 
                <button 
                   onClick={handleSubmit} 

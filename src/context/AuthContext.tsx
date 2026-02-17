@@ -102,26 +102,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               ...userDoc.data(),
               uid: user.uid,
             } as User;
-            
+
             console.log(`📄 Usuario cargado de Firestore:`, {
               name: userData.name,
               role: userData.role,
               distributorId: userData.distributorId,
               storeCode: userData.storeCode,
-              city: userData.city
+              city: userData.city,
+              countryId: userData.countryId
             });
-            
+
             // Enriquecer datos si es STORE y falta ciudad/distribuidor
             userData = await enrichUserWithStoreData(userData);
-            
+
             console.log(`✅ Usuario después de enriquecimiento:`, {
               name: userData.name,
               role: userData.role,
               distributorId: userData.distributorId,
               storeCode: userData.storeCode,
-              city: userData.city
+              city: userData.city,
+              countryId: userData.countryId
             });
-            
+
             setCurrentUser(userData);
             setFirebaseUser(user);
           } else {

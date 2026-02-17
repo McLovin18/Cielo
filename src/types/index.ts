@@ -120,7 +120,7 @@ export interface Invoice {
   
   status: 'pending' | 'approved' | 'rejected';
   totalAmount: number;
-  totalPoints: number;
+  pointsEarned: number;
   
   createdAt: Date;
   approvedAt?: Date;

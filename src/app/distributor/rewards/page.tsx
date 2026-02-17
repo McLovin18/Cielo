@@ -5,6 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
+import rewardService from '@/services/rewardService';
+interface CountryReward {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl?: string;
+  pointsRequired: number;
+  active: boolean;
+  status: string;
+}
+
 
 interface RewardStock {
   id: string;
@@ -26,12 +37,38 @@ interface RewardClaim {
 }
 
 export default function DistributorRewardsPage() {
+    // Manejar cambios en el input de stock
+    const handleStockInput = (rewardId: string, value: number) => {
+      setStockInputs(prev => ({ ...prev, [rewardId]: value }));
+    };
+
+    // Guardar el stock para un premio
+    const handleSaveStock = async (reward: CountryReward) => {
+      if (!user?.distributorId || !user?.countryId) return;
+      const quantity = stockInputs[reward.id];
+      if (quantity === undefined || quantity < 0) return;
+      try {
+        await rewardService.createDistributorStock({
+          distributorId: user.distributorId,
+          rewardId: reward.id,
+          countryId: user.countryId,
+          quantity,
+          reserved: 0,
+        });
+        await loadData();
+        setStockInputs(prev => ({ ...prev, [reward.id]: 0 }));
+      } catch (error) {
+        console.error('Error al guardar el stock:', error);
+      }
+    };
   const { user, loading } = useAuth();
   const router = useRouter();
   const [stocks, setStocks] = useState<RewardStock[]>([]);
   const [claims, setClaims] = useState<RewardClaim[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [tab, setTab] = useState<'stock' | 'claims'>('stock');
+  const [rewards, setRewards] = useState<CountryReward[]>([]);
+  const [stockInputs, setStockInputs] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!loading && user?.role !== 'DISTRIBUTOR') {
@@ -39,55 +76,74 @@ export default function DistributorRewardsPage() {
     }
   }, [user, loading, router]);
 
+  // Definir loadData fuera del useEffect para que esté disponible globalmente
+  const loadData = async () => {
+    try {
+      setLoadingData(true);
+      const countryId = user?.countryId || '';
+
+      // Cargar productos de recompensa disponibles (countryRewards)
+      const rewardsSnap = await getDocs(query(
+        collection(db, 'countryRewards'),
+        where('countryId', '==', countryId),
+        where('active', '==', true)
+      ));
+      const rewardsData: CountryReward[] = rewardsSnap.docs.map(d => ({
+        id: d.id,
+        name: d.data().name,
+        description: d.data().description,
+        imageUrl: d.data().imageUrl,
+        pointsRequired: d.data().pointsRequired,
+        active: d.data().active,
+        status: d.data().status,
+      }));
+      setRewards(rewardsData);
+
+      // Cargar stock de premios
+      const stockSnap = await getDocs(query(
+        collection(db, 'distributorRewardStock'),
+        where('countryId', '==', countryId),
+        where('distributorId', '==', user?.distributorId || '')
+      ));
+      const stockData: RewardStock[] = stockSnap.docs.map(d => ({
+        id: d.id,
+        rewardId: d.data().rewardId,
+        rewardName: d.data().rewardName,
+        quantity: d.data().quantity || 0,
+        available: d.data().available || 0,
+        reserved: d.data().reserved || 0,
+      }));
+      setStocks(stockData);
+
+      // Cargar claims
+      const claimsSnap = await getDocs(query(
+        collection(db, 'rewardClaims'),
+        where('distributorId', '==', user?.distributorId || ''),
+        where('status', 'in', ['assigned', 'in_transit', 'delivered'])
+      ));
+      const claimsData: RewardClaim[] = claimsSnap.docs.map(d => ({
+        id: d.id,
+        storeId: d.data().storeId,
+        storeName: d.data().storeName,
+        rewardId: d.data().rewardId,
+        rewardName: d.data().rewardName,
+        status: d.data().status,
+        claimedAt: d.data().claimedAt?.toDate?.() || new Date(),
+      }));
+      setClaims(claimsData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoadingData(true);
-        const countryId = user?.countryId || '';
-
-        // Cargar stock de premios
-        const stockSnap = await getDocs(query(
-          collection(db, 'distributorRewardStock'),
-          where('countryId', '==', countryId),
-          where('distributorId', '==', user?.uid || '')
-        ));
-        const stockData: RewardStock[] = stockSnap.docs.map(d => ({
-          id: d.id,
-          rewardId: d.data().rewardId,
-          rewardName: d.data().rewardName,
-          quantity: d.data().quantity || 0,
-          available: d.data().available || 0,
-          reserved: d.data().reserved || 0,
-        }));
-        setStocks(stockData);
-
-        // Cargar reclamos asignados
-        const claimsSnap = await getDocs(query(
-          collection(db, 'rewardClaims'),
-          where('countryId', '==', countryId),
-          where('status', 'in', ['assigned', 'in_transit', 'delivered'])
-        ));
-        const claimsData: RewardClaim[] = claimsSnap.docs.map(d => ({
-          id: d.id,
-          storeId: d.data().storeId,
-          storeName: d.data().storeName,
-          rewardId: d.data().rewardId,
-          rewardName: d.data().rewardName,
-          status: d.data().status,
-          claimedAt: d.data().claimedAt?.toDate?.() || new Date(),
-        }));
-        setClaims(claimsData);
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setLoadingData(false);
-      }
-    };
-
     if (user?.countryId && user?.uid) {
       loadData();
     }
   }, [user?.countryId, user?.uid]);
+// ...existing code...
 
   const handleUpdateStatus = async (claimId: string, newStatus: 'in_transit' | 'delivered') => {
     try {
@@ -134,39 +190,66 @@ export default function DistributorRewardsPage() {
           </button>
         </div>
 
+
         {tab === 'stock' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <table className="w-full">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto responsive-table-wrapper">
+            <table className="min-w-full">
               <thead className="bg-gray-100 dark:bg-gray-700">
                 <tr>
                   <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 dark:text-white">Premio</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 dark:text-white">Total</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 dark:text-white">Disponible</th>
-                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 dark:text-white">Reservado</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 dark:text-white">Stock Actual</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 dark:text-white">Nuevo Stock</th>
+                  <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 dark:text-white">Acción</th>
                 </tr>
               </thead>
               <tbody>
-                {stocks.map((stock, idx) => (
-                  <tr key={stock.id} className={idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'}>
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{stock.rewardName}</td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{stock.quantity}</td>
-                    <td className="px-6 py-4 text-green-600 font-bold">{stock.available}</td>
-                    <td className="px-6 py-4 text-yellow-600 font-bold">{stock.reserved}</td>
-                  </tr>
-                ))}
+                {rewards.map((reward, idx) => {
+                  const stock = stocks.find(s => s.rewardId === reward.id);
+                  return (
+                    <tr key={reward.id} className={idx % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'}>
+                      <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                        <div className="flex items-center gap-2">
+                          {reward.imageUrl && <img src={reward.imageUrl} alt={reward.name} className="w-10 h-10 rounded" />}
+                          <div>
+                            <div>{reward.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{reward.description}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-gray-600 dark:text-gray-400">{stock ? stock.quantity : 0}</td>
+                      <td className="px-6 py-4">
+                        <input
+                          type="number"
+                          min={0}
+                          value={stockInputs[reward.id] ?? ''}
+                          onChange={e => handleStockInput(reward.id, Number(e.target.value))}
+                          className="w-24 px-2 py-1 rounded border border-gray-300 dark:border-gray-600"
+                        />
+                      </td>
+                      <td className="px-6 py-4">
+                        <button
+                          onClick={() => handleSaveStock(reward)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        >
+                          Guardar Stock
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-            {stocks.length === 0 && (
+            {rewards.length === 0 && (
               <div className="p-6 text-center text-gray-600 dark:text-gray-400">
-                No hay stock de premios asignado
+                No hay productos de recompensa disponibles
               </div>
             )}
           </div>
         )}
 
         {tab === 'claims' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <table className="w-full">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto responsive-table-wrapper">
+            <table className="min-w-full">
               <thead className="bg-gray-100 dark:bg-gray-700">
                 <tr>
                   <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 dark:text-white">Tienda</th>

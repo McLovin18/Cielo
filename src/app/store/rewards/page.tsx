@@ -3,23 +3,29 @@
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, QueryConstraint, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, QueryConstraint, updateDoc, doc, getDoc } from 'firebase/firestore';
 import { RewardClaim, CountryReward } from '@/types'; // Import CountryReward
 import Link from 'next/link';
 import rewardService from '@/services/rewardService';
 
+
 export default function StoreRewardsPage() {
   const { currentUser, loading } = useRequireAuth(['STORE']);
-  
+
   // State for Claims (Recompensas reclamadas)
   const [myClaims, setMyClaims] = useState<(RewardClaim & { id: string })[]>([]);
-  
+
   // State for Catalog (Recompensas disponibles)
   const [catalog, setCatalog] = useState<CountryReward[]>([]);
-  
+
+  // Estado para datos de la tienda (puntos actualizados)
+  const [storeData, setStoreData] = useState<any>(null);
+  // Estado para stock del distribuidor
+  const [distributorStock, setDistributorStock] = useState<any[]>([]);
+
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'catalog' | 'my_rewards' | 'deliveries'>('catalog');
-  
+
   // Rating states (Existing logic for rating delivered items)
   const [ratingReward, setRatingReward] = useState<string | null>(null);
   const [ratingScore, setRatingScore] = useState(5);
@@ -35,7 +41,7 @@ export default function StoreRewardsPage() {
       if (currentUser?.uid && currentUser?.countryId) {
         try {
           setDataLoading(true);
-          
+
           // 1. Cargar catálogo disponible para mi país
           const availableRewards = await rewardService.getAvailableRewards(currentUser.countryId);
           setCatalog(availableRewards);
@@ -43,7 +49,22 @@ export default function StoreRewardsPage() {
           // 2. Cargar mis reclamos anteriores
           const claims = await rewardService.getMyClaims(currentUser.uid);
           setMyClaims(claims as (RewardClaim & { id: string })[]);
-          
+
+          // 3. Cargar datos de la tienda para puntos actualizados
+          const storeRef = doc(db, 'stores', currentUser.uid);
+          const storeSnap = await getDoc(storeRef);
+          if (storeSnap.exists()) {
+            const store = storeSnap.data();
+            setStoreData(store);
+
+            // 4. Cargar stock del distribuidor asignado
+            if (store.distributorId) {
+              const stock = await rewardService.getDistributorStock(store.distributorId);
+              setDistributorStock(stock);
+            } else {
+              setDistributorStock([]);
+            }
+          }
         } catch (err) {
           console.error('Error loading rewards data:', err);
         } finally {
@@ -58,10 +79,10 @@ export default function StoreRewardsPage() {
   }, [currentUser, loading]);
 
   const handleRedeem = async (reward: CountryReward) => {
-    if (!currentUser) return;
-    
-    // Validación básica de puntos (UI check)
-    if ((currentUser as any).pointsTotal < reward.pointsRequired) {
+    if (!currentUser || !storeData) return;
+
+    // Validación básica de puntos usando storeData
+    if ((storeData.pointsTotal || 0) < reward.pointsRequired) {
       setErrorMsg(`No tienes suficientes puntos. Necesitas ${reward.pointsRequired}.`);
       setTimeout(() => setErrorMsg(null), 3000);
       return;
@@ -74,18 +95,22 @@ export default function StoreRewardsPage() {
     try {
       setRedeeming(reward.id);
       setErrorMsg(null);
-      
-      await rewardService.redeemReward(currentUser, reward);
-      
+
+      await rewardService.redeemReward({ ...currentUser, ...storeData }, reward);
+
       setSuccessMsg(`¡Genial! Has canjeado: ${reward.name}`);
-      
+
       // Recargar datos para actualizar puntos y lista de reclamos
       const claims = await rewardService.getMyClaims(currentUser.uid);
       setMyClaims(claims as (RewardClaim & { id: string })[]);
-      
-      // NOTA: Idealmente actualizaríamos el contexto de usuario para reflejar los nuevos puntos inmediatamente
-      // window.location.reload(); // Simple brute-force update for now strictly for demo
-      
+
+      // Refrescar datos de la tienda para mostrar puntos actualizados
+      const storeRef = doc(db, 'stores', currentUser.uid);
+      const storeSnap = await getDoc(storeRef);
+      if (storeSnap.exists()) {
+        setStoreData(storeSnap.data());
+      }
+
       // Cambiar a tab de mis premios
       setActiveTab('my_rewards');
 
@@ -159,7 +184,7 @@ export default function StoreRewardsPage() {
               <div>
                 <p className="text-blue-100 font-medium mb-1">Mis Puntos Disponibles</p>
                 <h2 className="text-4xl font-bold">
-                  {(currentUser as any).pointsTotal?.toLocaleString() || 0} pts
+                  {storeData?.pointsTotal?.toLocaleString() || 0} pts
                 </h2>
               </div>
               <div className="bg-white/20 p-3 rounded-full">
@@ -227,43 +252,58 @@ export default function StoreRewardsPage() {
                 </p>
               </div>
             ) : (
-              catalog.map((reward) => (
-                <div key={reward.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300">
-                  <div className="h-48 bg-gray-200 dark:bg-gray-700 relative">
-                    {reward.imageUrl ? (
-                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={reward.imageUrl} alt={reward.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">🎁</div>
-                    )}
-                    <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                      {reward.pointsRequired.toLocaleString()} pts
+              catalog.map((reward) => {
+                // Buscar stock disponible para este reward
+                const stockEntry = distributorStock.find(
+                  (s) => s.rewardId === reward.id || s.rewardId === reward.rewardId
+                );
+                const stockQty = stockEntry ? stockEntry.quantity - (stockEntry.reserved || 0) : 0;
+                const outOfStock = stockQty <= 0;
+                return (
+                  <div key={reward.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden flex flex-col hover:shadow-xl transition-shadow duration-300">
+                    <div className="h-48 bg-gray-200 dark:bg-gray-700 relative">
+                      {reward.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={reward.imageUrl} alt={reward.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-4xl">🎁</div>
+                      )}
+                      <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                        {reward.pointsRequired.toLocaleString()} pts
+                      </div>
+                      <div className="absolute bottom-2 left-2 bg-gray-900/80 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                        Stock: {stockQty > 0 ? stockQty : 'Sin stock'}
+                      </div>
+                    </div>
+                    <div className="p-6 flex-1 flex flex-col">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{reward.name}</h3>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 flex-1">{reward.description}</p>
+                      <button
+                        onClick={() => handleRedeem(reward)}
+                        disabled={redeeming === reward.id || (storeData?.pointsTotal || 0) < reward.pointsRequired || outOfStock}
+                        className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
+                          (storeData?.pointsTotal || 0) >= reward.pointsRequired && !outOfStock
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
+                            : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                        }`}
+                      >
+                        {redeeming === reward.id
+                          ? 'Procesando...'
+                          : outOfStock
+                            ? 'Sin stock'
+                            : (storeData?.pointsTotal || 0) < reward.pointsRequired
+                              ? 'Puntos Insuficientes'
+                              : 'Canjear Ahora'}
+                      </button>
                     </div>
                   </div>
-                  <div className="p-6 flex-1 flex flex-col">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{reward.name}</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 flex-1">{reward.description}</p>
-                    
-                    <button
-                      onClick={() => handleRedeem(reward)}
-                      disabled={redeeming === reward.id || ((currentUser as any).pointsTotal || 0) < reward.pointsRequired}
-                      className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-                        ((currentUser as any).pointsTotal || 0) >= reward.pointsRequired
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md'
-                          : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
-                      }`}
-                    >
-                      {redeeming === reward.id ? 'Procesando...' : 
-                       ((currentUser as any).pointsTotal || 0) < reward.pointsRequired ? 'Puntos Insuficientes' : 'Canjear Ahora'}
-                    </button>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
 
-        {/* CONTENT: MY REWARDS (Now only Delivered/History) */}
+        {/* CONTENT: MY REWARDS (Todos los canjes con estado) */}
         {activeTab === 'my_rewards' && (
           <div className="space-y-8">
             {myClaims.length === 0 && (
@@ -273,36 +313,45 @@ export default function StoreRewardsPage() {
                 </p>
               </div>
             )}
-
-            {/* Delivered */}
-            {delivered.length > 0 && (
+            {myClaims.length > 0 && (
               <div>
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">✅ Historial de Canjes</h3>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">📦 Mis Canjes</h3>
                 <div className="grid gap-4">
-                  {delivered.map((claim) => (
-                    <div key={claim.id} className="bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-l-4 border-green-500">
+                  {myClaims.map((claim) => (
+                    <div key={claim.id} className={`bg-white dark:bg-gray-800 p-5 rounded-lg shadow border-l-4 ${claim.status === 'delivered' ? 'border-green-500' : claim.status === 'in_transit' ? 'border-blue-500' : claim.status === 'in_assignment' ? 'border-yellow-500' : 'border-gray-300'}`}>
                       <div className="flex justify-between items-start">
                         <div>
                           <h4 className="font-bold text-lg dark:text-white">{claim.rewardName}</h4>
-                          <p className="text-sm text-gray-500">Entregado el: {claim.deliveredAt ? new Date((claim.deliveredAt as any).seconds * 1000).toLocaleDateString() : '-'}</p>
+                          <p className="text-sm text-gray-500 mb-1">Estado: {(() => {
+                            switch (claim.status) {
+                              case 'pending': return 'Pendiente de asignación';
+                              case 'in_assignment': return 'Asignado a distribuidor';
+                              case 'in_transit': return 'En camino a tu tienda';
+                              case 'delivered': return 'Entregado';
+                              case 'expired': return 'Expirado';
+                              case 'cancelled': return 'Cancelado';
+                              default: return claim.status;
+                            }
+                          })()}</p>
+                          {claim.status === 'delivered' && (
+                            <p className="text-sm text-gray-500">Entregado el: {claim.deliveredAt ? new Date((claim.deliveredAt as any).seconds * 1000).toLocaleDateString() : '-'}</p>
+                          )}
                         </div>
-                        
-                        {!claim.rating ? (
+                        {claim.status === 'delivered' && !claim.rating ? (
                           <button
                             onClick={() => setRatingReward(claim.id)}
                             className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-200"
                           >
                             ⭐ Calificar
                           </button>
-                        ) : (
+                        ) : claim.status === 'delivered' && claim.rating ? (
                           <div className="flex items-center text-yellow-500">
                             {'⭐'.repeat(claim.rating.score)}
                           </div>
-                        )}
+                        ) : null}
                       </div>
-                      
                       {/* Rating Form Inline */}
-                      {ratingReward === claim.id && (
+                      {claim.status === 'delivered' && ratingReward === claim.id && (
                         <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg animate-fadeIn">
                           <p className="font-medium mb-2 dark:text-white">¿Qué tal el premio?</p>
                           <div className="flex gap-2 mb-3">

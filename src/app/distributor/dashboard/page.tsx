@@ -38,6 +38,19 @@ export default function DistributorDashboard() {
 
         {/* Grid de opciones */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Revisión Facturas */}
+          <Link href="/distributor/invoices">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition cursor-pointer border-l-4 border-yellow-400">
+              <div className="text-4xl mb-3">🧾</div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Revisar Facturas
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                Aprobar o rechazar facturas pendientes
+              </p>
+            </div>
+          </Link>
+
           {/* Entregas */}
           <Link href="/distributor/deliveries">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition cursor-pointer">

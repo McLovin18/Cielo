@@ -63,7 +63,7 @@ class StatisticsService {
       const invoices = snapshot.docs.map(doc => doc.data() as Invoice);
 
       const totalSales = invoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
-      const totalPoints = invoices.reduce((sum, inv) => sum + (inv.totalPoints || 0), 0);
+      const totalPoints = invoices.reduce((sum, inv) => sum + (inv.pointsEarned || 0), 0);
 
       return {
         storeId,
