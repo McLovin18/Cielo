@@ -54,7 +54,7 @@ function getDb(): admin.firestore.Firestore {
 
 // ...existing code...
 
-export const createDistributor = functions.https.onCall(async (data, context: any) => {
+export const createDistributor = functions.https.onCall(async (data: any, context: any) => {
   // Validar autenticación
   if (!context || !context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Debe estar autenticado.');
