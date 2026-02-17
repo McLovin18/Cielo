@@ -1,35 +1,35 @@
-[debug] [2026-02-17T18:38:17.213Z] ----------------------------------------------------------------------
-[debug] [2026-02-17T18:38:17.216Z] Command:       C:\Users\hector\node_modules\node\bin\node.exe C:\Users\hector\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js emulators:start --only functions
-[debug] [2026-02-17T18:38:17.216Z] CLI Version:   15.5.1
-[debug] [2026-02-17T18:38:17.216Z] Platform:      win32
-[debug] [2026-02-17T18:38:17.216Z] Node Version:  v22.6.0
-[debug] [2026-02-17T18:38:17.217Z] Time:          Tue Feb 17 2026 13:38:17 GMT-0500 (hora de Ecuador)
-[debug] [2026-02-17T18:38:17.217Z] ----------------------------------------------------------------------
+[debug] [2026-02-17T18:53:29.273Z] ----------------------------------------------------------------------
+[debug] [2026-02-17T18:53:29.281Z] Command:       C:\Users\hector\node_modules\node\bin\node.exe C:\Users\hector\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js emulators:start --only functions
+[debug] [2026-02-17T18:53:29.282Z] CLI Version:   15.5.1
+[debug] [2026-02-17T18:53:29.282Z] Platform:      win32
+[debug] [2026-02-17T18:53:29.282Z] Node Version:  v22.6.0
+[debug] [2026-02-17T18:53:29.283Z] Time:          Tue Feb 17 2026 13:53:29 GMT-0500 (hora de Ecuador)
+[debug] [2026-02-17T18:53:29.283Z] ----------------------------------------------------------------------
 [debug] 
-[debug] [2026-02-17T18:38:20.152Z] Object "" in "firebase.json" has unknown property: {"additionalProperty":"projects"}
-[debug] [2026-02-17T18:38:20.160Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
-[debug] [2026-02-17T18:38:20.161Z] > authorizing via signed-in user (hectorcobea03@gmail.com)
+[debug] [2026-02-17T18:53:32.668Z] Object "" in "firebase.json" has unknown property: {"additionalProperty":"projects"}
+[debug] [2026-02-17T18:53:32.679Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-17T18:53:32.679Z] > authorizing via signed-in user (hectorcobea03@gmail.com)
 [info] i  emulators: Starting emulators: functions {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: functions"}}
-[debug] [2026-02-17T18:38:20.174Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
-[debug] [2026-02-17T18:38:20.174Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}]},"metadata":{"message":"assigned listening specs for emulators"}}
-[debug] [2026-02-17T18:38:20.182Z] Write emulator hub locator at C:\Users\hector\AppData\Local\Temp\hub-cielodb-78dae.json
-[debug] [2026-02-17T18:38:20.201Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
-[debug] [2026-02-17T18:38:20.202Z] [eventarc] Eventarc Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
-[debug] [2026-02-17T18:38:20.202Z] [tasks] Cloud Tasks Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
-[debug] [2026-02-17T18:38:20.202Z] late-assigned ports for functions and eventarc emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"functions":[{"address":"127.0.0.1","family":"IPv4","port":5001}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
+[debug] [2026-02-17T18:53:32.692Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-02-17T18:53:32.692Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2026-02-17T18:53:32.698Z] Write emulator hub locator at C:\Users\hector\AppData\Local\Temp\hub-cielodb-78dae.json
+[debug] [2026-02-17T18:53:32.717Z] [functions] Functions Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-02-17T18:53:32.717Z] [eventarc] Eventarc Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-02-17T18:53:32.717Z] [tasks] Cloud Tasks Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-02-17T18:53:32.717Z] late-assigned ports for functions and eventarc emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000},{"address":"::1","family":"IPv6","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"functions":[{"address":"127.0.0.1","family":"IPv4","port":5001}],"eventarc":[{"address":"127.0.0.1","family":"IPv4","port":9299}],"tasks":[{"address":"127.0.0.1","family":"IPv4","port":9499}]},"metadata":{"message":"late-assigned ports for functions and eventarc emulators"}}
 [warn] !  functions: The following emulators are not running, calls to these services from the Functions emulator will affect production: apphosting, auth, firestore, database, hosting, pubsub, storage, dataconnect {"metadata":{"emulator":{"name":"functions"},"message":"The following emulators are not running, calls to these services from the Functions emulator will affect production: \u001b[1mapphosting, auth, firestore, database, hosting, pubsub, storage, dataconnect\u001b[22m"}}
-[debug] [2026-02-17T18:38:20.224Z] defaultcredentials: writing to file C:\Users\hector\AppData\Roaming\firebase\hectorcobea03_gmail_com_application_default_credentials.json
-[debug] [2026-02-17T18:38:20.228Z] Setting GAC to C:\Users\hector\AppData\Roaming\firebase\hectorcobea03_gmail_com_application_default_credentials.json {"metadata":{"emulator":{"name":"functions"},"message":"Setting GAC to C:\\Users\\hector\\AppData\\Roaming\\firebase\\hectorcobea03_gmail_com_application_default_credentials.json"}}
-[debug] [2026-02-17T18:38:20.230Z] Checked if tokens are valid: true, expires at: 1771356440762
-[debug] [2026-02-17T18:38:20.230Z] Checked if tokens are valid: true, expires at: 1771356440762
-[debug] [2026-02-17T18:38:20.231Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/cielodb-78dae/adminSdkConfig [none]
-[debug] [2026-02-17T18:38:20.939Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/cielodb-78dae/adminSdkConfig 200
-[debug] [2026-02-17T18:38:20.939Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/cielodb-78dae/adminSdkConfig {"projectId":"cielodb-78dae","storageBucket":"cielodb-78dae.firebasestorage.app"}
+[debug] [2026-02-17T18:53:32.756Z] defaultcredentials: writing to file C:\Users\hector\AppData\Roaming\firebase\hectorcobea03_gmail_com_application_default_credentials.json
+[debug] [2026-02-17T18:53:32.760Z] Setting GAC to C:\Users\hector\AppData\Roaming\firebase\hectorcobea03_gmail_com_application_default_credentials.json {"metadata":{"emulator":{"name":"functions"},"message":"Setting GAC to C:\\Users\\hector\\AppData\\Roaming\\firebase\\hectorcobea03_gmail_com_application_default_credentials.json"}}
+[debug] [2026-02-17T18:53:32.761Z] Checked if tokens are valid: true, expires at: 1771356440762
+[debug] [2026-02-17T18:53:32.761Z] Checked if tokens are valid: true, expires at: 1771356440762
+[debug] [2026-02-17T18:53:32.762Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/cielodb-78dae/adminSdkConfig [none]
+[debug] [2026-02-17T18:53:33.416Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/cielodb-78dae/adminSdkConfig 200
+[debug] [2026-02-17T18:53:33.416Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/cielodb-78dae/adminSdkConfig {"projectId":"cielodb-78dae","storageBucket":"cielodb-78dae.firebasestorage.app"}
 [info] i  functions: Watching "C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions" for Cloud Functions... {"metadata":{"emulator":{"name":"functions"},"message":"Watching \"C:\\Users\\hector\\Documents\\desarrolloWeb\\cielo-promo\\functions\" for Cloud Functions..."}}
-[debug] [2026-02-17T18:38:20.977Z] Validating nodejs source
+[debug] [2026-02-17T18:53:33.460Z] Validating nodejs source
 [warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
 [warn] !  functions: Please note that there will be breaking changes when you upgrade. 
-[debug] [2026-02-17T18:38:22.063Z] > [functions] package.json contents: {
+[debug] [2026-02-17T18:53:35.270Z] > [functions] package.json contents: {
   "name": "functions",
   "description": "Cloud Functions for Cielo Promo",
   "scripts": {
@@ -55,121 +55,8 @@
     "typescript": "^5.0.0"
   }
 }
-[debug] [2026-02-17T18:38:22.064Z] Building nodejs source
-[debug] [2026-02-17T18:38:22.064Z] Failed to find version of module node: reached end of search path C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\node_modules
+[debug] [2026-02-17T18:53:35.270Z] Building nodejs source
+[debug] [2026-02-17T18:53:35.271Z] Failed to find version of module node: reached end of search path C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\node_modules
 [warn] !  functions: Your requested "node" version "20" doesn't match your global version "22". Using node@22 from host. 
-[debug] [2026-02-17T18:38:22.070Z] Could not find functions.yaml. Must use http discovery
-[debug] [2026-02-17T18:38:22.078Z] Found firebase-functions binary at 'C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\node_modules\.bin\firebase-functions'
-[info] Serving at port 8293
-
-[debug] [2026-02-17T18:38:22.897Z] Got response from /__/functions.yaml {"endpoints":{"scheduledAutoAssignPendingClaims":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"scheduleTrigger":{"schedule":"every 5 minutes","retryConfig":{},"timeZone":"America/Bogota"},"entryPoint":"scheduledAutoAssignPendingClaims"},"createDistributor":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"createDistributor"},"analyzeInvoice":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"analyzeInvoice"},"calculateInvoicePoints":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"invoices/{invoiceId}"},"retry":false},"entryPoint":"calculateInvoicePoints"},"confirmInvoice":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"confirmInvoice"},"onRewardClaimStatusUpdate":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.updated","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"rewardClaims/{claimId}"},"retry":false},"entryPoint":"onRewardClaimStatusUpdate"},"approveInvoice":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"approveInvoice"},"approveInvoiceAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"approveInvoiceAdmin"},"rejectInvoiceAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"rejectInvoiceAdmin"},"claimReward":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"claimReward"},"assignCountryAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"assignCountryAdmin"},"deleteCountryAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"deleteCountryAdmin"},"registerStore":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"registerStore"},"onPointTransactionDeleted":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.deleted","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"pointTransactions/{transactionId}"},"retry":false},"entryPoint":"onPointTransactionDeleted"},"onInvoiceDeleted":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.deleted","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"invoices/{invoiceId}"},"retry":false},"entryPoint":"onInvoiceDeleted"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}],"extensions":{}}
-[info] +  functions: Loaded functions definitions from source: scheduledAutoAssignPendingClaims, createDistributor, analyzeInvoice, calculateInvoicePoints, confirmInvoice, onRewardClaimStatusUpdate, approveInvoice, approveInvoiceAdmin, rejectInvoiceAdmin, claimReward, assignCountryAdmin, deleteCountryAdmin, registerStore, onPointTransactionDeleted, onInvoiceDeleted. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: scheduledAutoAssignPendingClaims, createDistributor, analyzeInvoice, calculateInvoicePoints, confirmInvoice, onRewardClaimStatusUpdate, approveInvoice, approveInvoiceAdmin, rejectInvoiceAdmin, claimReward, assignCountryAdmin, deleteCountryAdmin, registerStore, onPointTransactionDeleted, onInvoiceDeleted."}}
-[info] i  functions[us-central1-scheduledAutoAssignPendingClaims]: function ignored because the pubsub emulator does not exist or is not running. {"metadata":{"emulator":{"name":"functions"},"message":"function ignored because the pubsub emulator does not exist or is not running."}}
-[info] +  functions[us-central1-createDistributor]: http function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/createDistributor). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/createDistributor)."}}
-[info] +  functions[us-central1-analyzeInvoice]: http function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/analyzeInvoice). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/analyzeInvoice)."}}
-[info] i  functions[us-central1-calculateInvoicePoints]: function ignored because the firestore emulator does not exist or is not running. {"metadata":{"emulator":{"name":"functions"},"message":"function ignored because the firestore emulator does not exist or is not running."}}
-[info] +  functions[us-central1-confirmInvoice]: http function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/confirmInvoice). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/confirmInvoice)."}}
-[info] i  functions[us-central1-onRewardClaimStatusUpdate]: function ignored because the firestore emulator does not exist or is not running. {"metadata":{"emulator":{"name":"functions"},"message":"function ignored because the firestore emulator does not exist or is not running."}}
-[info] +  functions[us-central1-approveInvoice]: http function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/approveInvoice). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/approveInvoice)."}}
-[info] +  functions[us-central1-approveInvoiceAdmin]: http function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/approveInvoiceAdmin). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/approveInvoiceAdmin)."}}
-[info] +  functions[us-central1-rejectInvoiceAdmin]: http function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/rejectInvoiceAdmin). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/rejectInvoiceAdmin)."}}
-[info] +  functions[us-central1-claimReward]: http function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/claimReward). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/claimReward)."}}
-[info] +  functions[us-central1-assignCountryAdmin]: http function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/assignCountryAdmin). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/assignCountryAdmin)."}}
-[info] +  functions[us-central1-deleteCountryAdmin]: http function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/deleteCountryAdmin). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/deleteCountryAdmin)."}}
-[info] +  functions[us-central1-registerStore]: http function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/registerStore). {"metadata":{"emulator":{"name":"functions"},"message":"\u001b[1mhttp\u001b[22m function initialized (http://127.0.0.1:5001/cielodb-78dae/us-central1/registerStore)."}}
-[info] i  functions[us-central1-onPointTransactionDeleted]: function ignored because the firestore emulator does not exist or is not running. {"metadata":{"emulator":{"name":"functions"},"message":"function ignored because the firestore emulator does not exist or is not running."}}
-[info] i  functions[us-central1-onInvoiceDeleted]: function ignored because the firestore emulator does not exist or is not running. {"metadata":{"emulator":{"name":"functions"},"message":"function ignored because the firestore emulator does not exist or is not running."}}
-[debug] [2026-02-17T18:38:27.969Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
-[info] 
-┌─────────────────────────────────────────────────────────────┐
-│ ✔  All emulators ready! It is now safe to connect your app. │
-│ i  View Emulator UI at http://127.0.0.1:4000/               │
-└─────────────────────────────────────────────────────────────┘
-
-┌───────────┬────────────────┬─────────────────────────────────┐
-│ Emulator  │ Host:Port      │ View in Emulator UI             │
-├───────────┼────────────────┼─────────────────────────────────┤
-│ Functions │ 127.0.0.1:5001 │ http://127.0.0.1:4000/functions │
-└───────────┴────────────────┴─────────────────────────────────┘
-  Emulator Hub host: 127.0.0.1 port: 4400
-  Other reserved ports: 4500
-
-Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
- 
-[debug] [2026-02-17T18:39:31.886Z] File C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\src\index.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File C:\\Users\\hector\\Documents\\desarrolloWeb\\cielo-promo\\functions\\src\\index.ts changed, reloading triggers"}}
-[debug] [2026-02-17T18:39:32.900Z] Validating nodejs source
-[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
-[warn] !  functions: Please note that there will be breaking changes when you upgrade. 
-[debug] [2026-02-17T18:39:34.804Z] > [functions] package.json contents: {
-  "name": "functions",
-  "description": "Cloud Functions for Cielo Promo",
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
-    "serve": "npm run build && firebase emulators:start --only functions",
-    "shell": "npm run build && firebase functions:shell",
-    "start": "npm run shell",
-    "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
-  },
-  "engines": {
-    "node": "20"
-  },
-  "main": "lib/index.js",
-  "dependencies": {
-    "@google-cloud/vision": "^5.3.4",
-    "firebase-admin": "^12.0.0",
-    "firebase-functions": "^5.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
-  }
-}
-[debug] [2026-02-17T18:39:34.805Z] Building nodejs source
-[debug] [2026-02-17T18:39:34.805Z] Failed to find version of module node: reached end of search path C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\node_modules
-[warn] !  functions: Your requested "node" version "20" doesn't match your global version "22". Using node@22 from host. 
-[debug] [2026-02-17T18:39:34.808Z] Could not find functions.yaml. Must use http discovery
-[debug] [2026-02-17T18:39:34.820Z] Found firebase-functions binary at 'C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\node_modules\.bin\firebase-functions'
-[info] Serving at port 8856
-
-[debug] [2026-02-17T18:39:36.453Z] Got response from /__/functions.yaml {"endpoints":{"scheduledAutoAssignPendingClaims":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"scheduleTrigger":{"schedule":"every 5 minutes","retryConfig":{},"timeZone":"America/Bogota"},"entryPoint":"scheduledAutoAssignPendingClaims"},"createDistributor":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"createDistributor"},"analyzeInvoice":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"analyzeInvoice"},"calculateInvoicePoints":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"invoices/{invoiceId}"},"retry":false},"entryPoint":"calculateInvoicePoints"},"confirmInvoice":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"confirmInvoice"},"onRewardClaimStatusUpdate":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.updated","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"rewardClaims/{claimId}"},"retry":false},"entryPoint":"onRewardClaimStatusUpdate"},"approveInvoice":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"approveInvoice"},"approveInvoiceAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"approveInvoiceAdmin"},"rejectInvoiceAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"rejectInvoiceAdmin"},"claimReward":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"claimReward"},"assignCountryAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"assignCountryAdmin"},"deleteCountryAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"deleteCountryAdmin"},"registerStore":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"registerStore"},"onPointTransactionDeleted":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.deleted","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"pointTransactions/{transactionId}"},"retry":false},"entryPoint":"onPointTransactionDeleted"},"onInvoiceDeleted":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.deleted","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"invoices/{invoiceId}"},"retry":false},"entryPoint":"onInvoiceDeleted"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}],"extensions":{}}
-[info] +  functions: Loaded functions definitions from source: scheduledAutoAssignPendingClaims, createDistributor, analyzeInvoice, calculateInvoicePoints, confirmInvoice, onRewardClaimStatusUpdate, approveInvoice, approveInvoiceAdmin, rejectInvoiceAdmin, claimReward, assignCountryAdmin, deleteCountryAdmin, registerStore, onPointTransactionDeleted, onInvoiceDeleted. {"metadata":{"emulator":{"name":"functions"},"message":"Loaded functions definitions from source: scheduledAutoAssignPendingClaims, createDistributor, analyzeInvoice, calculateInvoicePoints, confirmInvoice, onRewardClaimStatusUpdate, approveInvoice, approveInvoiceAdmin, rejectInvoiceAdmin, claimReward, assignCountryAdmin, deleteCountryAdmin, registerStore, onPointTransactionDeleted, onInvoiceDeleted."}}
-[debug] [2026-02-17T18:39:45.844Z] File C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\src\index.ts changed, reloading triggers {"metadata":{"emulator":{"name":"functions"},"message":"File C:\\Users\\hector\\Documents\\desarrolloWeb\\cielo-promo\\functions\\src\\index.ts changed, reloading triggers"}}
-[debug] [2026-02-17T18:39:46.849Z] Validating nodejs source
-[warn] !  functions: package.json indicates an outdated version of firebase-functions. Please upgrade using npm install --save firebase-functions@latest in your functions directory. 
-[warn] !  functions: Please note that there will be breaking changes when you upgrade. 
-[debug] [2026-02-17T18:39:48.820Z] > [functions] package.json contents: {
-  "name": "functions",
-  "description": "Cloud Functions for Cielo Promo",
-  "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
-    "serve": "npm run build && firebase emulators:start --only functions",
-    "shell": "npm run build && firebase functions:shell",
-    "start": "npm run shell",
-    "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
-  },
-  "engines": {
-    "node": "20"
-  },
-  "main": "lib/index.js",
-  "dependencies": {
-    "@google-cloud/vision": "^5.3.4",
-    "firebase-admin": "^12.0.0",
-    "firebase-functions": "^5.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
-  }
-}
-[debug] [2026-02-17T18:39:48.820Z] Building nodejs source
-[debug] [2026-02-17T18:39:48.820Z] Failed to find version of module node: reached end of search path C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\node_modules
-[warn] !  functions: Your requested "node" version "20" doesn't match your global version "22". Using node@22 from host. 
-[debug] [2026-02-17T18:39:48.821Z] Could not find functions.yaml. Must use http discovery
-[debug] [2026-02-17T18:39:48.829Z] Found firebase-functions binary at 'C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\node_modules\.bin\firebase-functions'
-[info] Serving at port 8275
-
-[debug] [2026-02-17T18:39:49.796Z] Got response from /__/functions.yaml {"endpoints":{"scheduledAutoAssignPendingClaims":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"scheduleTrigger":{"schedule":"every 5 minutes","retryConfig":{},"timeZone":"America/Bogota"},"entryPoint":"scheduledAutoAssignPendingClaims"},"createDistributor":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"createDistributor"},"analyzeInvoice":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"analyzeInvoice"},"calculateInvoicePoints":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.created","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"invoices/{invoiceId}"},"retry":false},"entryPoint":"calculateInvoicePoints"},"confirmInvoice":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"confirmInvoice"},"onRewardClaimStatusUpdate":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.updated","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"rewardClaims/{claimId}"},"retry":false},"entryPoint":"onRewardClaimStatusUpdate"},"approveInvoice":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"approveInvoice"},"approveInvoiceAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"approveInvoiceAdmin"},"rejectInvoiceAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"rejectInvoiceAdmin"},"claimReward":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"claimReward"},"assignCountryAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"assignCountryAdmin"},"deleteCountryAdmin":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"deleteCountryAdmin"},"registerStore":{"platform":"gcfv1","labels":{},"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"serviceAccountEmail":null,"vpc":null,"callableTrigger":{},"entryPoint":"registerStore"},"onPointTransactionDeleted":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.deleted","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"pointTransactions/{transactionId}"},"retry":false},"entryPoint":"onPointTransactionDeleted"},"onInvoiceDeleted":{"availableMemoryMb":null,"timeoutSeconds":null,"minInstances":null,"maxInstances":null,"ingressSettings":null,"concurrency":null,"serviceAccountEmail":null,"vpc":null,"platform":"gcfv2","labels":{},"eventTrigger":{"eventType":"google.cloud.firestore.document.v1.deleted","eventFilters":{"database":"(default)","namespace":"(default)"},"eventFilterPathPatterns":{"document":"invoices/{invoiceId}"},"retry":false},"entryPoint":"onInvoiceDeleted"}},"specVersion":"v1alpha1","requiredAPIs":[{"api":"cloudscheduler.googleapis.com","reason":"Needed for scheduled functions."}],"extensions":{}}
+[debug] [2026-02-17T18:53:35.277Z] Could not find functions.yaml. Must use http discovery
+[debug] [2026-02-17T18:53:35.284Z] Found firebase-functions binary at 'C:\Users\hector\Documents\desarrolloWeb\cielo-promo\functions\node_modules\.bin\firebase-functions'

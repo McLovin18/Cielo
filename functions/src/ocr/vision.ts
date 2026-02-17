@@ -141,22 +141,18 @@ function parseInvoiceText(text: string) {
             if (lines[lineIdx + 1]) searchLines.push(lines[lineIdx + 1]);
             const joined = searchLines.join(' ');
             // Buscar todos los números
-            const allNumbers = [...joined.matchAll(/\b(\d{1,4})\b/g)].map(m => parseInt(m[1], 10));
+            const allNumbers = [...joined.matchAll(/\b(\d{1,5})\b/g)].map(m => parseInt(m[1], 10));
             // Filtrar números que NO sean parte del SKU ni años ni volúmenes
             const filtered = allNumbers.filter(n =>
                 !skuNumericParts.includes(n) &&
                 !(n > 2020 && n < 2035) &&
-                !(n === 20 && product.name.includes('20L'))
+                !(n === 20 && product.name.includes('20L')) &&
+                n > 0 && n <= 500 // Solo cantidades realistas
             );
-            // Elegir el número más cercano a la palabra 'Cantidad' o al precio
+            // Buscar cantidad de derecha a izquierda (más cerca del precio)
             let quantity = 1;
             if (filtered.length > 0) {
-                // Si hay un número igual al precio, lo ignoramos
-                const priceStr = product.price.toString();
-                const priceNum = parseInt(priceStr, 10);
-                const filtered2 = filtered.filter(n => n !== priceNum);
-                if (filtered2.length > 0) quantity = filtered2[0];
-                else quantity = filtered[0];
+                quantity = [...filtered].reverse()[0]; // Tomar el primer candidato realista desde la derecha
             }
             items.push({
                 sku: product.sku,
