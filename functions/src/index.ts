@@ -119,7 +119,7 @@ export const createDistributor = functions.https.onCall(async (data: any, contex
  * CLOUD FUNCTION: analyzeInvoice
  * Recibe una imagen en Base64 desde el frontend, la pasa por OCR y devuelve datos estructurados.
  */
-export const analyzeInvoice = functions.https.onCall(async (data, _context) => {
+export const analyzeInvoice = functions.https.onCall(async (data: { imageBase64?: string } | any, _context) => {
   console.log("FUNCTION START: analyzeInvoice invoked"); // Debug log
   const imageBase64 = data?.imageBase64;
   if (!imageBase64) {
