@@ -1,6 +1,6 @@
 import { autoAssignPendingClaims } from './autoAssignPendingClaims';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentDeleted } from 'firebase-functions/v2/firestore';
 import * as functions from 'firebase-functions';
 
 /**
@@ -1206,17 +1206,15 @@ export const registerStore = functions.https.onCall(async (data:any) => {
  * Si se elimina una transacción de puntos (manual o automáticamente), 
  * actualizar el saldo de la tienda restando el valor eliminado.
  */
-export const onPointTransactionDeleted = functions.firestore
-  .document('pointTransactions/{transactionId}')
-  .onDelete(async (snap) => {
-    const data = snap.data();
-    if (!data) return;
+export const onPointTransactionDeleted = onDocumentDeleted('pointTransactions/{transactionId}', async (event) => {
+  const snap = event.data;
+  const data = snap ? snap.data() : undefined;
+  if (!data) return;
 
-    const { storeId, pointsChange } = data;
-    // Validar que hay storeId y que pointsChange es un número
-    if (!storeId || typeof pointsChange !== 'number') return;
+  const { storeId, pointsChange } = data;
+  if (!storeId || typeof pointsChange !== 'number') return;
 
-    console.log(`♻️ Detectada eliminación de tx ${snap.id}. Reajustando ${pointsChange} puntos a tienda ${storeId}...`);
+  console.log(`♻️ Detectada eliminación de tx ${snap?.id}. Reajustando ${pointsChange} puntos a tienda ${storeId}...`);
 
     const db = getDb(); // Usar helper getDb()
     const storeRef = db.collection('stores').doc(storeId);
@@ -1249,32 +1247,31 @@ export const onPointTransactionDeleted = functions.firestore
  * Si se elimina una factura, buscar y eliminar su transacción de puntos asociada.
  * Al eliminar la transacción, se disparará onPointTransactionDeleted para ajustar el saldo automáticamente.
  */
-export const onInvoiceDeleted = functions.firestore
-  .document('invoices/{invoiceId}')
-  .onDelete(async (snap) => {
-    const invoiceId = snap.id;
-    console.log(`🗑️ Factura eliminada: ${invoiceId}. Buscando transacciones huérfanas...`);
-    
-    const db = getDb();
+export const onInvoiceDeleted = onDocumentDeleted('invoices/{invoiceId}', async (event) => {
+  const snap = event.data;
+  const invoiceId = snap?.id;
+  console.log(`🗑️ Factura eliminada: ${invoiceId}. Buscando transacciones huérfanas...`);
+  
+  const db = getDb();
 
-    try {
-      const txSnapshot = await db.collection('pointTransactions')
-        .where('invoiceId', '==', invoiceId)
-        .get();
+  try {
+    const txSnapshot = await db.collection('pointTransactions')
+      .where('invoiceId', '==', invoiceId)
+      .get();
 
-      if (txSnapshot.empty) {
-        console.log(`ℹ️ No se encontraron transacciones para la factura ${invoiceId}.`);
-        return;
-      }
-
-      const batch = db.batch();
-      txSnapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
-      });
-
-      await batch.commit();
-      console.log(`✅ ${txSnapshot.size} transacciones eliminadas. Esto disparará reajuste de saldos.`);
-    } catch (error) {
-      console.error('❌ Error al limpiar relaciones de factura:', error);
+    if (txSnapshot.empty) {
+      console.log(`ℹ️ No se encontraron transacciones para la factura ${invoiceId}.`);
+      return;
     }
-  });
+
+    const batch = db.batch();
+    txSnapshot.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+
+    await batch.commit();
+    console.log(`✅ ${txSnapshot.size} transacciones eliminadas. Esto disparará reajuste de saldos.`);
+  } catch (error) {
+    console.error('❌ Error al limpiar relaciones de factura:', error);
+  }
+});
