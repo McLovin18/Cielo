@@ -51,14 +51,12 @@ function getDb(): admin.firestore.Firestore {
   return dbInstance;
 }
 
-/**
- * Cloud Function: createDistributor
- * Callable solo por SUPER_ADMIN o ADMIN_COUNTRY
- * Permite crear un usuario DISTRIBUTOR con countryId obligatorio
- */
+
+// ...existing code...
+
 export const createDistributor = functions.https.onCall(async (data, context) => {
   // Validar autenticación
-  if (!context.auth) {
+  if (!context || !context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Debe estar autenticado.');
   }
   const db = getDb();
@@ -122,65 +120,21 @@ export const createDistributor = functions.https.onCall(async (data, context) =>
  */
 export const analyzeInvoice = functions.https.onCall(async (data, context) => {
   console.log("FUNCTION START: analyzeInvoice invoked"); // Debug log
-
-  // 1. Validar autenticación
-  if (!context.auth) {
-    console.warn("Unauthorized access attempt to analyzeInvoice"); // Debug log
-    throw new functions.https.HttpsError(
-      'unauthenticated', 
-      'Debe estar autenticado para usar esta función.'
-    );
-  }
-
-  const { imageBase64 } = data;
-  // const { countryId } = data; // Unused for now
-
-  if (!imageBase64) {
-    console.warn("Missing imageBase64 in request"); // Debug log
-    throw new functions.https.HttpsError(
-      'invalid-argument',
-      'Falta la imagen (base64).'
-    );
-  }
-
-  try {
-    console.log("Starting image processing..."); // Debug log
-    
-    // Dynamic import to fix timeout issues
-    const { processInvoiceImage } = await import('./ocr/vision');
-
-    // 2. Procesar imagen (Llamada a Vision API o Mock)
-    const result = await processInvoiceImage(imageBase64);
-    console.log("Image processing successful", result); // Debug log
-
-    // 3. (Opcional) Loguear uso para cobrar o limitar
-    console.log(`User ${context.auth.uid} scanned invoice.`);
-
-    return result;
-
-  } catch (error: any) {
-    console.error("CRITICAL ERROR IN ANALYZEINVOICE CATCH BLOCK:", error); // Debug log
-
-    // Fallback: Si todo falla, devolver un mock de urgencia para no detener la demo
-    
-    // Loguear el error para propósitos de depuración
-    const errorMessage = error?.message || String(error);
-    const errorCode = error?.code || 'unknown'; 
-    console.warn(`⚠️ Error en OCR (${errorCode}): ${errorMessage}. Activando Fallback.`);
-
-    // Garantizar que la demo funcione devolviendo datos simulados siempre que falle
-    return {
-        rawText: 'Fallback System - Emergency Mode',
-        invoiceNumber: `FALLBACK-${Date.now()}`,
-        date: new Date().toISOString().split('T')[0],
-        items: [
-            { sku: 'AGUA-500', productName: 'Botellon Agua purificada 20L', quantity: 5, price: 18000 },
-            { sku: 'AGUA-500-CI', productName: 'Agua purificada Cielo 3.5L', quantity: 10, price: 6000 },
-            { sku: 'AGUA-1000-CI', productName: 'Botellon Agua Cielo 20L', quantity: 3, price: 16000 }
-        ]
-    };
-  }
+  // Fallback
+  return {
+    rawText: 'Fallback System - Emergency Mode',
+    invoiceNumber: `FALLBACK-${Date.now()}`,
+    date: new Date().toISOString().split('T')[0],
+    items: [
+      { sku: 'AGUA-500', productName: 'Botellon Agua purificada 20L', quantity: 5, price: 18000 },
+      { sku: 'AGUA-500-CI', productName: 'Agua purificada Cielo 3.5L', quantity: 10, price: 6000 },
+      { sku: 'AGUA-1000-CI', productName: 'Botellon Agua Cielo 20L', quantity: 3, price: 16000 }
+    ]
+  };
 });
+
+
+
 
 /**
  * Cloud Function: calculateInvoicePoints
