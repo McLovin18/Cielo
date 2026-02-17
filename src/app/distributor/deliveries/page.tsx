@@ -85,8 +85,7 @@ export default function DistributorDeliveriesPage() {
   // 'assigned' o 'in_assignment' -> New/Pending for distributor
   // 'in_transit' -> On the truck
   // 'delivered' -> Done
-  const assigned = deliveries.filter(d => d.status === 'assigned' || d.status === 'in_assignment');
-  const inTransit = deliveries.filter(d => d.status === 'in_transit');
+const assigned = deliveries.filter(d => d.status === 'in_assignment');  const inTransit = deliveries.filter(d => d.status === 'in_transit');
   const delivered = deliveries.filter(d => d.status === 'delivered');
 
   return (
