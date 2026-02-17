@@ -315,7 +315,7 @@ export const calculateInvoicePoints = onDocumentCreated('invoices/{invoiceId}', 
  * Reemplazo de calculateInvoicePoints para entornos híbridos o donde los triggers no son fiables desde cliente.
  * Recibe los datos de la factura, la crea en Firestore y calcula los puntos INMEDIATAMENTE.
  */
-export const confirmInvoice = functions.https.onCall(async (data, context) => {
+export const confirmInvoice = functions.https.onCall(async (data: any, context: any) => {
     // 1. Validar autenticación
     if (!context || !context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'Debe estar autenticado.');
