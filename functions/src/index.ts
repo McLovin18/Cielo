@@ -1,14 +1,22 @@
 import { autoAssignPendingClaims } from './autoAssignPendingClaims';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import * as functions from 'firebase-functions';
+
 /**
  * Cloud Function programada: autoAssignPendingClaims
  * Revisa y asigna reclamos 'pending' automáticamente si hay stock disponible.
  * Corre cada 5 minutos.
  */
-export const scheduledAutoAssignPendingClaims = functions.pubsub.schedule('every 5 minutes').onRun(async () => {
-  await autoAssignPendingClaims();
-  return null;
-});
-import * as functions from 'firebase-functions';
+export const scheduledAutoAssignPendingClaims = onSchedule(
+  {
+    schedule: 'every 5 minutes',
+    timeZone: 'America/Bogota', // Ajusta según tu zona
+  },
+  async (event) => {
+    await autoAssignPendingClaims();
+    return null;
+  }
+);
 import * as admin from 'firebase-admin';
 import { Timestamp, FieldValue } from 'firebase-admin/firestore';
 // import { processInvoiceImage } from './ocr/vision'; // Moved to dynamic import
