@@ -438,7 +438,8 @@ export default function StoreRewardsPage() {
             )}
 
             {/* Premios en Espera */}
-            {waiting.length > 0 && (
+             {/* Removed 'waiting' block as 'waiting' variable no longer exists */}
+             {/* {waiting.length > 0 && ( */}
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                   ⏳ En Espera
