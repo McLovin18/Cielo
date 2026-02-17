@@ -119,19 +119,31 @@ export const createDistributor = functions.https.onCall(async (data: any, contex
  * CLOUD FUNCTION: analyzeInvoice
  * Recibe una imagen en Base64 desde el frontend, la pasa por OCR y devuelve datos estructurados.
  */
-export const analyzeInvoice = functions.https.onCall(async (_data, _context) => {
+export const analyzeInvoice = functions.https.onCall(async (data, _context) => {
   console.log("FUNCTION START: analyzeInvoice invoked"); // Debug log
-  // Fallback
-  return {
-    rawText: 'Fallback System - Emergency Mode',
-    invoiceNumber: `FALLBACK-${Date.now()}`,
-    date: new Date().toISOString().split('T')[0],
-    items: [
-      { sku: 'AGUA-500', productName: 'Botellon Agua purificada 20L', quantity: 5, price: 18000 },
-      { sku: 'AGUA-500-CI', productName: 'Agua purificada Cielo 3.5L', quantity: 10, price: 6000 },
-      { sku: 'AGUA-1000-CI', productName: 'Botellon Agua Cielo 20L', quantity: 3, price: 16000 }
-    ]
-  };
+  const imageBase64 = data?.imageBase64;
+  if (!imageBase64) {
+    throw new functions.https.HttpsError('invalid-argument', 'No imageBase64 provided');
+  }
+  try {
+    // Dynamic import to avoid cold start penalty
+    const { processInvoiceImage } = await import('./ocr/vision');
+    const result = await processInvoiceImage(imageBase64);
+    return result;
+  } catch (error) {
+    console.error('❌ Error in analyzeInvoice OCR flow:', error);
+    // Fallback response if OCR fails
+    return {
+      rawText: 'Fallback System - Emergency Mode',
+      invoiceNumber: `FALLBACK-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      items: [
+        { sku: 'AGUA-500', productName: 'Botellon Agua purificada 20L', quantity: 5, price: 18000 },
+        { sku: 'AGUA-500-CI', productName: 'Agua purificada Cielo 3.5L', quantity: 10, price: 6000 },
+        { sku: 'AGUA-1000-CI', productName: 'Botellon Agua Cielo 20L', quantity: 3, price: 16000 }
+      ]
+    };
+  }
 });
 
 
