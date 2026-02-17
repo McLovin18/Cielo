@@ -35,19 +35,22 @@ export const processInvoiceImage = async (imageBase64: string): Promise<any> => 
             console.warn('⚠️ No text detected by Vision API');
             return { rawText: '', invoiceNumber: '', date: '', items: [] };
         }
-        // GUARDAR RAW TEXT EN FIRESTORE PARA DEBUG
+        // GUARDAR RAW TEXT Y RESULTADOS EN FIRESTORE PARA DEBUG
+        let parseResult = null;
         try {
+            parseResult = parseInvoiceText(fullText);
             const db = admin.firestore();
             await db.collection('ocr_debug').add({
                 createdAt: new Date(),
                 rawText: fullText,
                 imageHash: imageBase64.slice(0, 32),
+                parseResult,
             });
         } catch (e) {
-            console.warn('No se pudo guardar rawText en ocr_debug:', e);
+            console.warn('No se pudo guardar rawText/parseResult en ocr_debug:', e);
         }
         console.log('Texto detectado (Excerpt):', fullText.substring(0, 100) + '...');
-        return parseInvoiceText(fullText);
+        return parseResult;
 
     } catch (error) {
         console.error('❌ Error calling Vision API (Falling back to Mock):', error);
@@ -115,6 +118,8 @@ Total: $198.000
 function parseInvoiceText(text: string) {
     // Separar por líneas y limpiar espacios extra
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    console.log('--- OCR RAW TEXT ---');
+    console.log(text);
     const items: any[] = [];
     let invoiceNumber = '';
     let invoiceDate = '';
@@ -126,40 +131,56 @@ function parseInvoiceText(text: string) {
         const [day, month, year] = dateMatch[1].split('/');
         invoiceDate = `${year}-${month}-${day}`;
     }
-    // Estrategia robusta: buscar líneas que contengan SKU y cantidad, ignorando números del SKU
+    // Estrategia: buscar cada SKU en todas las líneas, aunque estén separadas
     for (const product of [
         { sku: 'AGUA-500', name: 'Botellon Agua purificada 20L', price: 18000 },
         { sku: 'AGUA-500-CI', name: 'Agua purificada Cielo 3.5L', price: 6000 },
         { sku: 'AGUA-1000-CI', name: 'Botellon Agua Cielo 20L', price: 16000 }
     ]) {
         const skuNumericParts = (product.sku.match(/\d+/g) || []).map(d => parseInt(d, 10));
-        // Buscar línea que contenga el SKU
-        const lineIdx = lines.findIndex(l => l.includes(product.sku));
-        if (lineIdx !== -1) {
-            // Buscar en la misma línea y la siguiente (por si el OCR separa columnas)
+        // Buscar todas las líneas donde aparece el SKU
+        const lineIndexes = lines.map((l, idx) => l.includes(product.sku) ? idx : -1).filter(idx => idx !== -1);
+        for (const lineIdx of lineIndexes) {
+            // Buscar en la misma línea y las siguientes 2 (por si el OCR separa columnas)
             let searchLines = [lines[lineIdx]];
             if (lines[lineIdx + 1]) searchLines.push(lines[lineIdx + 1]);
+            if (lines[lineIdx + 2]) searchLines.push(lines[lineIdx + 2]);
             const joined = searchLines.join(' ');
-            // Buscar todos los números
-            const allNumbers = [...joined.matchAll(/\b(\d{1,5})\b/g)].map(m => parseInt(m[1], 10));
+            // Buscar el nombre del producto en el texto
+            const nameIdx = joined.indexOf(product.name);
+            let afterName = joined;
+            if (nameIdx !== -1) {
+                afterName = joined.substring(nameIdx + product.name.length);
+            }
+            // Buscar todos los números realistas después del nombre
+            const allNumbers = [...afterName.matchAll(/\b(\d{1,5})\b/g)].map(m => ({
+                value: parseInt(m[1], 10),
+                index: m.index || 0
+            }));
+            console.log(`[${product.sku}] Números detectados después del nombre:`, allNumbers.map(n => n.value));
             // Filtrar números que NO sean parte del SKU ni años ni volúmenes
-            const filtered = allNumbers.filter(n =>
-                !skuNumericParts.includes(n) &&
-                !(n > 2020 && n < 2035) &&
-                !(n === 20 && product.name.includes('20L')) &&
-                n > 0 && n <= 500 // Solo cantidades realistas
+            const filtered = allNumbers.filter(obj =>
+                !skuNumericParts.includes(obj.value) &&
+                !(obj.value > 2020 && obj.value < 2035) &&
+                !(obj.value === 20 && product.name.includes('20L')) &&
+                obj.value > 0 && obj.value <= 500
             );
-            // Buscar cantidad de derecha a izquierda (más cerca del precio)
+            console.log(`[${product.sku}] Números candidatos a cantidad:`, filtered.map(n => n.value));
+            // Tomar el primer número realista después del nombre
             let quantity = 1;
             if (filtered.length > 0) {
-                quantity = [...filtered].reverse()[0]; // Tomar el primer candidato realista desde la derecha
+                quantity = filtered[0].value;
             }
-            items.push({
-                sku: product.sku,
-                productName: product.name,
-                quantity,
-                price: product.price
-            });
+            // Solo agregar si no existe ya ese SKU en items (por si el OCR repite líneas)
+            if (!items.some(i => i.sku === product.sku)) {
+                items.push({
+                    sku: product.sku,
+                    productName: product.name,
+                    quantity,
+                    price: product.price
+                });
+                console.log(`[${product.sku}] Resultado final:`, { sku: product.sku, quantity, price: product.price });
+            }
         }
     }
     return {
