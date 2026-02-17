@@ -152,21 +152,41 @@ function parseInvoiceText(text: string) {
             if (nameIdx !== -1) {
                 afterName = joined.substring(nameIdx + product.name.length);
             }
-            // Buscar todos los números realistas después del nombre
-            const allNumbers = [...afterName.matchAll(/\b(\d{1,5})\b/g)].map(m => ({
+            // Buscar todos los números realistas después del nombre (en la línea)
+            let allNumbers = [...afterName.matchAll(/\b(\d{1,5})\b/g)].map(m => ({
                 value: parseInt(m[1], 10),
                 index: m.index || 0
             }));
-            console.log(`[${product.sku}] Números detectados después del nombre:`, allNumbers.map(n => n.value));
             // Filtrar números que NO sean parte del SKU ni años ni volúmenes
-            const filtered = allNumbers.filter(obj =>
+            let filtered = allNumbers.filter(obj =>
                 !skuNumericParts.includes(obj.value) &&
                 !(obj.value > 2020 && obj.value < 2035) &&
                 !(obj.value === 20 && product.name.includes('20L')) &&
-                obj.value > 0 && obj.value <= 500
+                obj.value > 0 && obj.value <= 1000
             );
+            // Si no hay candidatos, buscar en las siguientes líneas (OCR móvil)
+            if (filtered.length === 0) {
+                let found = false;
+                for (let offset = 1; offset <= 2 && !found; offset++) {
+                    const nextLine = lines[lineIdx + offset];
+                    if (nextLine) {
+                        const nums = [...nextLine.matchAll(/\b(\d{1,5})\b/g)].map(m => parseInt(m[1], 10));
+                        const numsFiltered = nums.filter(n =>
+                            !skuNumericParts.includes(n) &&
+                            !(n > 2020 && n < 2035) &&
+                            !(n === 20 && product.name.includes('20L')) &&
+                            n > 0 && n <= 1000
+                        );
+                        if (numsFiltered.length > 0) {
+                            filtered = [{ value: numsFiltered[0], index: 0 }];
+                            found = true;
+                        }
+                    }
+                }
+            }
+            console.log(`[${product.sku}] Números detectados después del nombre:`, allNumbers.map(n => n.value));
             console.log(`[${product.sku}] Números candidatos a cantidad:`, filtered.map(n => n.value));
-            // Tomar el primer número realista después del nombre
+            // Tomar el primer número realista después del nombre o en las siguientes líneas
             let quantity = 1;
             if (filtered.length > 0) {
                 quantity = filtered[0].value;

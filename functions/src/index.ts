@@ -125,10 +125,18 @@ export const analyzeInvoice = functions.https.onCall(async (data: { imageBase64?
   if (!imageBase64) {
     throw new functions.https.HttpsError('invalid-argument', 'No imageBase64 provided');
   }
+  // LOG para comparar base64 recibido
+  console.log(`[analyzeInvoice] base64 length: ${imageBase64.length}`);
+  console.log(`[analyzeInvoice] base64 start: ${imageBase64.slice(0, 100)}`);
+  console.log(`[analyzeInvoice] base64 end: ${imageBase64.slice(-100)}`);
   try {
     // Dynamic import to avoid cold start penalty
     const { processInvoiceImage } = await import('./ocr/vision');
     const result = await processInvoiceImage(imageBase64);
+    // LOG texto OCR crudo si existe
+    if (result && result.rawText) {
+      console.log('[analyzeInvoice] OCR rawText (excerpt):', result.rawText.substring(0, 300));
+    }
     return result;
   } catch (error) {
     console.error('❌ Error in analyzeInvoice OCR flow:', error);
@@ -160,7 +168,7 @@ export const analyzeInvoice = functions.https.onCall(async (data: { imageBase64?
  * - Crear registro de transacción
  * - Verificar si hay premios automáticos ganados
  */
-export const calculateInvoicePoints = onDocumentCreated('invoices/{invoiceId}', async (event) => {
+export const calculateInvoicePoints = onDocumentCreated({ document: 'invoices/{invoiceId}', region: 'us-central1' }, async (event) => {
   try {
     const snap = event.data;
     const invoice = snap ? snap.data() : undefined;
@@ -401,6 +409,7 @@ export const confirmInvoice = functions.https.onCall(async (data: any, context: 
                         const globalDoc = globalProductQuery.docs[0].data();
                         pointsPerUnit = globalDoc.pointsValue || 0;
                         productFound = true;
+                        console.log(`Found global product for SKU ${item.sku} with ${pointsPerUnit} points`);
                     }
                 }
 
