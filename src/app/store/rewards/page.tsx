@@ -154,7 +154,8 @@ export default function StoreRewardsPage() {
   // Filter claims logic
   const delivered = myClaims.filter(r => r.status === 'delivered');
   const available = myClaims.filter(r => (r.status as string) === 'assigned' || r.status === 'in_transit' || r.status === 'in_assignment');
-  const waiting = myClaims.filter(r => (r.status as string) === 'pending');
+  // Removed 'pending' status as it's not a valid RewardClaim status
+  // const waiting = myClaims.filter(r => (r.status as string) === 'pending');
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
@@ -255,7 +256,7 @@ export default function StoreRewardsPage() {
               catalog.map((reward) => {
                 // Buscar stock disponible para este reward
                 const stockEntry = distributorStock.find(
-                  (s) => s.rewardId === reward.id || s.rewardId === reward.rewardId
+                  (s) => s.countryRewardId === reward.id
                 );
                 const stockQty = stockEntry ? stockEntry.quantity - (stockEntry.reserved || 0) : 0;
                 const outOfStock = stockQty <= 0;
@@ -324,7 +325,7 @@ export default function StoreRewardsPage() {
                           <h4 className="font-bold text-lg dark:text-white">{claim.rewardName}</h4>
                           <p className="text-sm text-gray-500 mb-1">Estado: {(() => {
                             switch (claim.status) {
-                              case 'pending': return 'Pendiente de asignación';
+                              // Removed 'pending' status as it's not a valid RewardClaim status
                               case 'in_assignment': return 'Asignado a distribuidor';
                               case 'in_transit': return 'En camino a tu tienda';
                               case 'delivered': return 'Entregado';
