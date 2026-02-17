@@ -1,13 +1,11 @@
-import * as functions from 'firebase-functions';
+import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 // Trigger: Al actualizar un rewardClaim a 'assigned', 'in_transit' o 'delivered', descuenta stock del distribuidor
-export const onRewardClaimStatusUpdate = functions.firestore
-  .document('rewardClaims/{claimId}')
-  .onUpdate(async (change) => {
-    const before = change.before.data();
-    const after = change.after.data();
+export const onRewardClaimStatusUpdate = onDocumentUpdated('rewardClaims/{claimId}', async (event) => {
+    const before = event.data?.before?.data();
+    const after = event.data?.after?.data();
     // Solo actuar si el status cambió a 'delivered' y antes no era 'delivered'
     if (!before || !after) return;
     if (before.status === after.status) return;
