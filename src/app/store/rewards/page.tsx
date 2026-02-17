@@ -154,6 +154,14 @@ export default function StoreRewardsPage() {
   // Filter claims logic
   const delivered = myClaims.filter(r => r.status === 'delivered');
   const available = myClaims.filter(r => (r.status as string) === 'assigned' || r.status === 'in_transit' || r.status === 'in_assignment');
+
+  // Rewards waiting for stock (en espera): claim is not delivered and stock is 0 or less
+  const waitingRewards = myClaims.filter(r => {
+    if (r.status === 'delivered') return false;
+    const stockEntry = distributorStock.find(s => s.countryRewardId === r.countryRewardId);
+    const stockQty = stockEntry ? stockEntry.quantity - (stockEntry.reserved || 0) : 0;
+    return stockQty <= 0;
+  });
   // Removed 'pending' status as it's not a valid RewardClaim status
   // const waiting = myClaims.filter(r => (r.status as string) === 'pending');
   
@@ -438,14 +446,13 @@ export default function StoreRewardsPage() {
             )}
 
             {/* Premios en Espera */}
-             {/* Removed 'waiting' block as 'waiting' variable no longer exists */}
-             {/* {waiting.length > 0 && ( */}
+            {waitingRewards.length > 0 && (
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                   ⏳ En Espera
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {waiting.map(reward => (
+                  {waitingRewards.map(reward => (
                     <div
                       key={reward.id}
                       className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 opacity-60"
