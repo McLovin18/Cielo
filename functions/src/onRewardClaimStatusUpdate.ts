@@ -1,5 +1,5 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
-import * as admin from 'firebase-admin';
+import { getDb } from './index';
 import { FieldValue } from 'firebase-admin/firestore';
 
 // Trigger: Al actualizar un rewardClaim a 'assigned', 'in_transit' o 'delivered', descuenta stock del distribuidor
@@ -17,7 +17,7 @@ export const onRewardClaimStatusUpdate = onDocumentUpdated('rewardClaims/{claimI
     const countryId = after.countryId;
     if (!distributorId || !rewardId || !countryId) return;
 
-    const db = admin.firestore();
+    const db = getDb();
     // Buscar el stock del distribuidor para ese premio
     const stockSnap = await db.collection('distributorRewardStock')
       .where('distributorId', '==', distributorId)

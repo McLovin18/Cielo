@@ -25,7 +25,7 @@ import { onRewardClaimStatusUpdate } from './onRewardClaimStatusUpdate';
 
 // Lazy initialization to prevent "Timeout after 10000ms" during function load
 let dbInstance: admin.firestore.Firestore | null = null;
-function getDb(): admin.firestore.Firestore {
+export function getDb(): admin.firestore.Firestore {
   if (!dbInstance) {
     if (admin.apps.length === 0) {
       try {

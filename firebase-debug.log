@@ -1,0 +1,17 @@
+[debug] [2026-02-17T22:29:11.572Z] ----------------------------------------------------------------------
+[debug] [2026-02-17T22:29:11.577Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\hector\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions
+[debug] [2026-02-17T22:29:11.577Z] CLI Version:   15.5.1
+[debug] [2026-02-17T22:29:11.577Z] Platform:      win32
+[debug] [2026-02-17T22:29:11.577Z] Node Version:  v24.11.1
+[debug] [2026-02-17T22:29:11.577Z] Time:          Tue Feb 17 2026 17:29:11 GMT-0500 (hora de Ecuador)
+[debug] [2026-02-17T22:29:11.577Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-02-17T22:29:14.932Z] Object "" in "firebase.json" has unknown property: {"additionalProperty":"projects"}
+[debug] [2026-02-17T22:29:14.935Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-02-17T22:29:14.936Z] > authorizing via signed-in user (hectorcobea03@gmail.com)
+[debug] [2026-02-17T22:29:14.936Z] [iam] checking project cielodb-78dae for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2026-02-17T22:29:14.937Z] Checked if tokens are valid: true, expires at: 1771370032477
+[debug] [2026-02-17T22:29:14.937Z] Checked if tokens are valid: true, expires at: 1771370032477
+[debug] [2026-02-17T22:29:14.938Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/cielodb-78dae:testIamPermissions [none]
+[debug] [2026-02-17T22:29:14.938Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/cielodb-78dae:testIamPermissions  x-goog-user-project=cielodb-78dae
+[debug] [2026-02-17T22:29:14.938Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/cielodb-78dae:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}

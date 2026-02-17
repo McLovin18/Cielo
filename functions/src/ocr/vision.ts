@@ -1,4 +1,4 @@
-import * as admin from 'firebase-admin';
+import { getDb } from '../index';
 // import * as functions from 'firebase-functions';
 // import { ImageAnnotatorClient } from '@google-cloud/vision'; // Movido a import dinámico para evitar timeouts de carga
 
@@ -39,7 +39,7 @@ export const processInvoiceImage = async (imageBase64: string): Promise<any> => 
         let parseResult = null;
         try {
             parseResult = parseInvoiceText(fullText);
-            const db = admin.firestore();
+            const db = getDb();
             await db.collection('ocr_debug').add({
                 createdAt: new Date(),
                 rawText: fullText,

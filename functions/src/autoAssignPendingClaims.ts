@@ -1,4 +1,4 @@
-import * as admin from 'firebase-admin';
+import { getDb } from './index';
 import { Timestamp } from 'firebase-admin/firestore';
 
 /**
@@ -7,7 +7,7 @@ import { Timestamp } from 'firebase-admin/firestore';
  * Actualiza el estado a 'in_assignment', descuenta stock y marca como reservado.
  */
 export async function autoAssignPendingClaims() {
-  const db = admin.firestore();
+  const db = getDb();
   const pendingClaimsSnap = await db.collection('rewardClaims')
     .where('status', '==', 'pending')
     .get();
