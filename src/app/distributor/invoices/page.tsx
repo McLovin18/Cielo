@@ -8,7 +8,7 @@ import { httpsCallable } from 'firebase/functions';
 import Link from 'next/link';
 import { Invoice, Store } from '@/types';
 
-type InvoiceWithStore = Invoice & { storeName: string };
+type InvoiceWithStore = Invoice & { storeName: string; products?: any[] };
 
 export default function DistributorInvoicesPage() {
   const { currentUser, loading } = useRequireAuth(['DISTRIBUTOR']);
@@ -172,7 +172,15 @@ export default function DistributorInvoicesPage() {
                         <div>
                             <h3 className="font-bold text-lg text-blue-900">{inv.storeName || 'Tienda Desconocida'}</h3>
                             <p className="text-sm text-gray-500">Factura #{inv.invoiceNumber}</p>
-                            <p className="text-xs text-gray-400">{new Date(inv.createdAt.seconds * 1000).toLocaleString()}</p>
+                                                        <p className="text-xs text-gray-400">
+                                                            {
+                                                                inv.createdAt instanceof Date
+                                                                    ? inv.createdAt.toLocaleString()
+                                                                    : (inv.createdAt && typeof inv.createdAt === 'object' && 'seconds' in inv.createdAt)
+                                                                        ? new Date((inv.createdAt as { seconds: number }).seconds * 1000).toLocaleString()
+                                                                        : ''
+                                                            }
+                                                        </p>
                         </div>
                         <div className="text-right">
                              <div className="font-bold text-xl text-green-600">+{inv.pointsEarned || 0} pts</div>
