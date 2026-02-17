@@ -400,7 +400,7 @@ export default function StoreRewardsPage() {
         {/* CONTENT: DELIVERIES (En Tránsito & En Espera) */}
         {activeTab === 'deliveries' && (
           <div className="space-y-8">
-             {available.length === 0 && waiting.length === 0 && (
+             {available.length === 0 && (
               <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
                 <p className="text-gray-500 dark:text-gray-400 text-lg">
                   No tienes entregas pendientes.
