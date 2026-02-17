@@ -131,75 +131,75 @@ function parseInvoiceText(text: string) {
         const [day, month, year] = dateMatch[1].split('/');
         invoiceDate = `${year}-${month}-${day}`;
     }
-    // Estrategia: buscar cada SKU en todas las líneas, aunque estén separadas
-    for (const product of [
-        { sku: 'AGUA-500', name: 'Botellon Agua purificada 20L', price: 18000 },
-        { sku: 'AGUA-500-CI', name: 'Agua purificada Cielo 3.5L', price: 6000 },
-        { sku: 'AGUA-1000-CI', name: 'Botellon Agua Cielo 20L', price: 16000 }
-    ]) {
-        const skuNumericParts = (product.sku.match(/\d+/g) || []).map(d => parseInt(d, 10));
-        // Buscar todas las líneas donde aparece el SKU
-        const lineIndexes = lines.map((l, idx) => l.includes(product.sku) ? idx : -1).filter(idx => idx !== -1);
-        for (const lineIdx of lineIndexes) {
-            // Buscar en la misma línea y las siguientes 2 (por si el OCR separa columnas)
-            let searchLines = [lines[lineIdx]];
-            if (lines[lineIdx + 1]) searchLines.push(lines[lineIdx + 1]);
-            if (lines[lineIdx + 2]) searchLines.push(lines[lineIdx + 2]);
-            const joined = searchLines.join(' ');
-            // Buscar el nombre del producto en el texto
-            const nameIdx = joined.indexOf(product.name);
-            let afterName = joined;
-            if (nameIdx !== -1) {
-                afterName = joined.substring(nameIdx + product.name.length);
-            }
-            // Buscar todos los números realistas después del nombre (en la línea)
-            let allNumbers = [...afterName.matchAll(/\b(\d{1,5})\b/g)].map(m => ({
-                value: parseInt(m[1], 10),
-                index: m.index || 0
-            }));
-            // Filtrar números que NO sean parte del SKU ni años ni volúmenes
-            let filtered = allNumbers.filter(obj =>
-                !skuNumericParts.includes(obj.value) &&
-                !(obj.value > 2020 && obj.value < 2035) &&
-                !(obj.value === 20 && product.name.includes('20L')) &&
-                obj.value > 0 && obj.value <= 1000
-            );
-            // Si no hay candidatos, buscar en las siguientes líneas (OCR móvil)
-            if (filtered.length === 0) {
-                let found = false;
-                for (let offset = 1; offset <= 2 && !found; offset++) {
-                    const nextLine = lines[lineIdx + offset];
-                    if (nextLine) {
-                        const nums = [...nextLine.matchAll(/\b(\d{1,5})\b/g)].map(m => parseInt(m[1], 10));
+    // Extraer todos los SKUs, nombres y cantidades en orden
+    const skuList = ['AGUA-500', 'AGUA-500-CI', 'AGUA-1000-CI'];
+    const nameList = [
+        'Botellon Agua purificada 20L',
+        'Agua purificada Cielo 3.5L',
+        'Botellon Agua Cielo 20L'
+    ];
+    const priceList = [18000, 6000, 16000];
+    const foundSKUs = lines.filter(l => skuList.includes(l));
+    const foundNames = lines.filter(l => nameList.includes(l));
+    const foundQuantities = lines.filter(l => /^\d{1,4}$/.test(l)).map(Number).filter(n => n > 0 && n < 1000);
+    // Si hay exactamente 3 SKUs, 3 nombres y 3 cantidades, asociar por posición
+    if (foundSKUs.length === 3 && foundNames.length === 3 && foundQuantities.length === 3) {
+        for (let i = 0; i < 3; i++) {
+            items.push({
+                sku: skuList[i],
+                productName: nameList[i],
+                quantity: foundQuantities[i],
+                price: priceList[i]
+            });
+            console.log(`[${skuList[i]}] Resultado final:`, { sku: skuList[i], quantity: foundQuantities[i], price: priceList[i] });
+        }
+    } else {
+        // UNIVERSAL: Para cada SKU, buscar el nombre más cercano después del SKU, y la cantidad más cercana después del nombre
+        for (const product of [
+            { sku: 'AGUA-500', name: 'Botellon Agua purificada 20L', price: 18000 },
+            { sku: 'AGUA-500-CI', name: 'Agua purificada Cielo 3.5L', price: 6000 },
+            { sku: 'AGUA-1000-CI', name: 'Botellon Agua Cielo 20L', price: 16000 }
+        ]) {
+            const skuNumericParts = (product.sku.match(/\d+/g) || []).map(d => parseInt(d, 10));
+            // Buscar todas las líneas donde aparece el SKU
+            const lineIndexes = lines.map((l, idx) => l.includes(product.sku) ? idx : -1).filter(idx => idx !== -1);
+            for (const lineIdx of lineIndexes) {
+                // Buscar la línea del nombre de producto más cercana después del SKU
+                const nameLineIdx = lines.findIndex((l, idx) => idx > lineIdx && l.includes(product.name));
+                let quantity = 1;
+                if (nameLineIdx !== -1) {
+                    // Buscar la cantidad más cercana después del nombre (en las siguientes 5 líneas)
+                    let found = false;
+                    for (let offset = 1; offset <= 5 && !found; offset++) {
+                        const qtyLine = lines[nameLineIdx + offset] || '';
+                        // Buscar todos los números realistas en esa línea
+                        const nums = [...qtyLine.matchAll(/\b(\d{1,5})\b/g)].map(m => parseInt(m[1], 10));
+                        // Filtrar números que NO sean parte del SKU, ni años, ni volúmenes, ni precios
                         const numsFiltered = nums.filter(n =>
                             !skuNumericParts.includes(n) &&
                             !(n > 2020 && n < 2035) &&
                             !(n === 20 && product.name.includes('20L')) &&
-                            n > 0 && n <= 1000
+                            n > 0 && n <= 1000 &&
+                            // No es un precio (no está seguido de ".000" o "$" en la línea)
+                            !qtyLine.includes(`$${n}`) &&
+                            !qtyLine.includes(`${n}.000`)
                         );
                         if (numsFiltered.length > 0) {
-                            filtered = [{ value: numsFiltered[0], index: 0 }];
+                            quantity = numsFiltered[0]; // Tomar el primer número válido
                             found = true;
                         }
                     }
                 }
-            }
-            console.log(`[${product.sku}] Números detectados después del nombre:`, allNumbers.map(n => n.value));
-            console.log(`[${product.sku}] Números candidatos a cantidad:`, filtered.map(n => n.value));
-            // Tomar el primer número realista después del nombre o en las siguientes líneas
-            let quantity = 1;
-            if (filtered.length > 0) {
-                quantity = filtered[0].value;
-            }
-            // Solo agregar si no existe ya ese SKU en items (por si el OCR repite líneas)
-            if (!items.some(i => i.sku === product.sku)) {
-                items.push({
-                    sku: product.sku,
-                    productName: product.name,
-                    quantity,
-                    price: product.price
-                });
-                console.log(`[${product.sku}] Resultado final:`, { sku: product.sku, quantity, price: product.price });
+                // Solo agregar si no existe ya ese SKU en items (por si el OCR repite líneas)
+                if (!items.some(i => i.sku === product.sku)) {
+                    items.push({
+                        sku: product.sku,
+                        productName: product.name,
+                        quantity,
+                        price: product.price
+                    });
+                    console.log(`[${product.sku}] Resultado final:`, { sku: product.sku, quantity, price: product.price });
+                }
             }
         }
     }

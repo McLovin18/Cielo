@@ -60,60 +60,32 @@ export const invoiceService = {
       const uploadResult = await uploadBytes(storageRef, data.imageFile);
       const imageUrl = await getDownloadURL(uploadResult.ref);
 
-      // HYBRID FIX: In development mode (where we connect to Prod Firestore but run Local Functions),
-      // Firestore Triggers DO NOT FIRE. We must call a Callable Function to confirm and calculate points.
-      if (process.env.NODE_ENV === 'development') {
-          console.log("⚡ HYBRID MODE: Calling 'confirmInvoice' directly to ensure processing");
-          const confirmInvoice = httpsCallable(functions, 'confirmInvoice');
-          try {
-            const result: any = await confirmInvoice({
-              storeId: data.storeId,
-              storeName: data.storeName,
-              countryId: data.countryId,
-              invoiceNumber: data.invoiceNumber || new Date().getTime().toString(),
-              imageUrl,
-              products: data.products,
-              totalAmount: data.totalAmount
-            });
-            return { invoiceId: result.data.invoiceId };
-          } catch (fnError: any) {
-             // Si el error es de validación (duplicate, invalid-arg, etc), NO hacer fallback
-             // Queremos que el error suba a la UI
-             if (fnError.message && (
-                 fnError.message.includes('ya existe') || 
-                 fnError.code === 'already-exists' ||
-                 fnError.code === 'failed-precondition'
-             )) {
-                 throw fnError;
-             }
-
-             console.error("Hybrid function call failed (network/internal), falling back to direct write:", fnError);
-             // Fallthrough to legacy method ONLY if function is unreachable or internal error
-          }
+      // Siempre usar confirmInvoice (Cloud Function) para crear la factura
+      const confirmInvoice = httpsCallable(functions, 'confirmInvoice');
+      try {
+        const result: any = await confirmInvoice({
+          storeId: data.storeId,
+          storeName: data.storeName,
+          countryId: data.countryId,
+          invoiceNumber: data.invoiceNumber || new Date().getTime().toString(),
+          imageUrl,
+          products: data.products,
+          totalAmount: data.totalAmount
+        });
+        return { invoiceId: result.data.invoiceId };
+      } catch (fnError: any) {
+        // Si el error es de validación (duplicate, invalid-arg, etc), lo subimos a la UI
+        if (fnError.message && (
+          fnError.message.includes('ya existe') ||
+          fnError.code === 'already-exists' ||
+          fnError.code === 'failed-precondition'
+        )) {
+          throw fnError;
+        }
+        // Otros errores
+        console.error("Function call to confirmInvoice failed:", fnError);
+        throw fnError;
       }
-
-      // Legacy/Production method (if triggers are deployed)
-      // Crear documento de factura
-      const invoiceData: Omit<Invoice, 'id' | 'distributorId'> = {
-        storeId: data.storeId,
-        storeName: data.storeName,
-        countryId: data.countryId,
-        invoiceNumber: data.invoiceNumber || new Date().getTime().toString(), 
-        invoiceDate: new Date(),
-        imageUrl,
-        totalAmount: data.totalAmount,
-        pointsEarned: 0, // Se calculará en Cloud Function
-        status: 'pending',
-        createdAt: new Date(),
-      };
-
-      const docRef = await addDoc(collection(db, 'invoices'), {
-        ...invoiceData,
-        distributorId: '', // Será asignado por Cloud Function
-      });
-      
-      return { invoiceId: docRef.id };
-
     } catch (error) {
       console.error('Error creating invoice:', error);
       throw error;

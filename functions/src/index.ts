@@ -351,79 +351,77 @@ export const confirmInvoice = functions.https.onCall(async (data: any, context: 
     console.log(`📝 Confirming invoice ${invoiceNumber} for store ${storeId}`);
     const db = getDb();
 
+
     try {
-        // 0. Obtener datos de la tienda para asignar DISTRIBUTOR_ID correcto
-        // Use consistent path access
-        const storeDoc = await db.collection('stores').doc(storeId).get();
-        let distributorId = '';
-        
-        if (storeDoc.exists) {
-             const storeData = storeDoc.data();
-             distributorId = storeData?.distributorId || '';
-             console.log(`✅ Found distributorId for store ${storeId}: "${distributorId}"`);
+      // 0. Obtener datos de la tienda para asignar DISTRIBUTOR_ID correcto
+      const storeDoc = await db.collection('stores').doc(storeId).get();
+      let distributorId = '';
+      if (storeDoc.exists) {
+        const storeData = storeDoc.data();
+        distributorId = storeData?.distributorId || '';
+        if (!distributorId) {
+          console.warn(`⚠️ distributorId missing in store ${storeId}.`);
+          distributorId = 'UNKNOWN-DISTRIBUTOR'; // Fallback value
         } else {
-             console.warn(`⚠️ Store ${storeId} not found during invoice confirmation.`);
+          console.log(`✅ Found distributorId for store ${storeId}: "${distributorId}"`);
         }
+      } else {
+        console.warn(`⚠️ Store ${storeId} not found during invoice confirmation.`);
+        distributorId = 'STORE-NOT-FOUND'; // Fallback value
+      }
 
-        // A. Validar duplicados (Prevención de fraude)
-        const duplicateQuery = await db.collection('invoices')
-            .where('invoiceNumber', '==', invoiceNumber)
+      // A. Validar duplicados (Prevención de fraude)
+      const duplicateQuery = await db.collection('invoices')
+        .where('invoiceNumber', '==', invoiceNumber)
+        .where('countryId', '==', countryId)
+        .where('status', 'in', ['approved', 'pending'])
+        .get();
+
+      if (!duplicateQuery.empty) {
+        console.warn(`⚠️ Factura duplicada detectada: ${invoiceNumber}`);
+        throw new functions.https.HttpsError('already-exists', `El número de factura ${invoiceNumber} ya existe en el sistema. No puede haber otra factura con ese mismo número.`);
+      }
+
+      // B. Calcular Puntos (Lógica clonada de calculateInvoicePoints)
+      let pointsEarned = 0;
+      if (products && products.length > 0) {
+        for (const item of products) {
+          if (!item.sku) continue;
+          // 1. Buscar producto en configuración del país
+          const countryProductQuery = await db.collection('countryProducts')
             .where('countryId', '==', countryId)
-            .where('status', 'in', ['approved', 'pending'])
+            .where('sku', '==', item.sku)
+            .limit(1)
             .get();
-
-        if (!duplicateQuery.empty) {
-            console.warn(`⚠️ Factura duplicada detectada: ${invoiceNumber}`);
-            // Mensaje específico solicitado: "no puede haber otra factura con ese mismo numero"
-            throw new functions.https.HttpsError('already-exists', `El número de factura ${invoiceNumber} ya existe en el sistema. No puede haber otra factura con ese mismo número.`);
-        }
-
-        // B. Calcular Puntos (Lógica clonada de calculateInvoicePoints)
-        let pointsEarned = 0;
-        
-        if (products && products.length > 0) {
-            for (const item of products) {
-                if (!item.sku) continue;
-
-                // 1. Buscar producto en configuración del país
-                const countryProductQuery = await db.collection('countryProducts')
-                    .where('countryId', '==', countryId)
-                    .where('sku', '==', item.sku)
-                    .limit(1)
-                    .get();
-
-                let pointsPerUnit = 0;
-                let productFound = false;
-
-                if (!countryProductQuery.empty) {
-                    const productDoc = countryProductQuery.docs[0].data();
-                    pointsPerUnit = productDoc.pointsValue || 0;
-                    productFound = true;
-                } else {
-                    // 2. Global
-                    const globalProductQuery = await db.collection('globalProducts')
-                        .where('sku', '==', item.sku)
-                        .limit(1)
-                        .get();
-                    if (!globalProductQuery.empty) {
-                        const globalDoc = globalProductQuery.docs[0].data();
-                        pointsPerUnit = globalDoc.pointsValue || 0;
-                        productFound = true;
-                        console.log(`Found global product for SKU ${item.sku} with ${pointsPerUnit} points`);
-                    }
-                }
-
-                if (!productFound) {
-                    // 3. Fallback Demo
-                    if (item.sku.includes('AGUA-500')) { pointsPerUnit = 20; productFound = true; }
-                    else if (item.sku.includes('AGUA-1000')) { pointsPerUnit = 35; productFound = true; }
-                }
-
-                pointsEarned += pointsPerUnit * (item.quantity || 0);
+          let pointsPerUnit = 0;
+          let productFound = false;
+          if (!countryProductQuery.empty) {
+            const productDoc = countryProductQuery.docs[0].data();
+            pointsPerUnit = productDoc.pointsValue || 0;
+            productFound = true;
+          } else {
+            // 2. Global
+            const globalProductQuery = await db.collection('globalProducts')
+              .where('sku', '==', item.sku)
+              .limit(1)
+              .get();
+            if (!globalProductQuery.empty) {
+              const globalDoc = globalProductQuery.docs[0].data();
+              pointsPerUnit = globalDoc.pointsValue || 0;
+              productFound = true;
+              console.log(`Found global product for SKU ${item.sku} with ${pointsPerUnit} points`);
             }
-        } else {
-            pointsEarned = Math.floor(totalAmount || 0);
+          }
+          if (!productFound) {
+            // 3. Fallback Demo
+            if (item.sku.includes('AGUA-500')) { pointsPerUnit = 20; productFound = true; }
+            else if (item.sku.includes('AGUA-1000')) { pointsPerUnit = 35; productFound = true; }
+          }
+          pointsEarned += pointsPerUnit * (item.quantity || 0);
         }
+      } else {
+        pointsEarned = Math.floor(totalAmount || 0);
+      }
 
         // C. Crear documento de factura
         const invoiceRef = db.collection('invoices').doc(); // Auto-ID
