@@ -28,22 +28,21 @@ let dbInstance: admin.firestore.Firestore | null = null;
 export function getDb(): admin.firestore.Firestore {
   if (!dbInstance) {
     if (admin.apps.length === 0) {
-      try {
-        // Intentar usar credenciales explícitas si estamos en emulador
-        if (process.env.FUNCTIONS_EMULATOR === 'true') {
+      // Solo usar credenciales explícitas en el emulador local
+      if (process.env.FUNCTIONS_EMULATOR === 'true') {
+        try {
           // eslint-disable-next-line @typescript-eslint/no-var-requires
-          // Ajuste de ruta: lib/index.js -> ../ -> functions -> ../ -> root
           const serviceAccount = require(process.env.SERVICE_ACCOUNT_PATH || '../../firebase-service-account.json');
           admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
-            // databaseURL: "https://cielodb-78dae.firebaseio.com" // Opcional
           });
           console.log('🔧 Admin initialized with Service Account (Local Emulator)');
-        } else {
+        } catch (e) {
+          console.warn('⚠️ Could not load service account key for emulator, falling back to default init:', e);
           admin.initializeApp();
         }
-      } catch (e) {
-        console.warn('⚠️ Could not load service account key, falling back to default init:', e);
+      } else {
+        // Siempre inicializar normalmente en producción
         admin.initializeApp();
       }
     }
